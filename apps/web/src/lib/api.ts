@@ -61,6 +61,7 @@ import type {
   EventoProgramadoInput,
   Institucion,
   Linea,
+  LoginInput,
   MesPOA,
   Meta,
   MetaInput,
@@ -174,5 +175,5 @@ export interface ApiClient {
   tablero(tipo: TipoTablero, p?: FiltrosComunes): Promise<TableroEjecutivo>;
 }
 
-/** Re-export del input de login para no acoplar el orden de imports. */
-export type { LoginInput as LoginInputRef } from "./types";
+/** Alias del input de login para no acoplar el orden de imports. */
+export type LoginInputRef = LoginInput;

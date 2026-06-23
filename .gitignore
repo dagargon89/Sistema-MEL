@@ -1,0 +1,30 @@
+# Dependencias
+node_modules/
+vendor/
+
+# Builds
+dist/
+build/
+/apps/web/dist/
+writable/
+
+# Entornos / secretos
+.env
+.env.local
+.env.*.local
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / SO
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# PHP / CI4
+/apps/api/writable/
+phpstan.cache
+.phpunit.cache/

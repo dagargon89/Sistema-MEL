@@ -24,7 +24,6 @@ import {
   type Ejecucion,
   type EjecucionCreada,
   type EjecucionInput,
-  type EstadoSolicitud,
   type EventoProgramado,
   type EventoProgramadoInput,
   type Institucion,
@@ -234,7 +233,7 @@ export const apiMock: ApiClient = {
   async listarActividades(p): Promise<Paged<ActividadConHerencia>> {
     await delay();
     const s = requiereSesion();
-    let rows = actividades
+    const rows = actividades
       .filter((a) => s.ambito.includes(a.id_institucion))
       .filter((a) => (p?.tipo ? a.tipo_registro === p.tipo : true))
       .filter((a) => (p?.caso ? a.caso_excepcional === p.caso : true))
@@ -300,7 +299,7 @@ export const apiMock: ApiClient = {
   async listarProcesos(p): Promise<Paged<Proceso>> {
     await delay();
     const s = requiereSesion();
-    let rows = procesos
+    const rows = procesos
       .filter((pr) => s.ambito.includes(institucionDeActividad(pr.id_actividad) ?? ""))
       .filter((pr) => (p?.id_actividad ? pr.id_actividad === p.id_actividad : true));
     return paginar(rows, p?.page, p?.limit);
@@ -332,7 +331,7 @@ export const apiMock: ApiClient = {
   async listarEventos(p): Promise<Paged<EventoProgramado>> {
     await delay();
     const s = requiereSesion();
-    let rows = eventos
+    const rows = eventos
       .filter((e) => s.ambito.includes(institucionDeActividad(e.id_actividad) ?? ""))
       .filter((e) => (p?.id_actividad ? e.id_actividad === p.id_actividad : true))
       .filter((e) => (p?.institucion ? institucionDeActividad(e.id_actividad) === p.institucion : true))
@@ -385,7 +384,7 @@ export const apiMock: ApiClient = {
       const ev = eventos.find((x) => x.id_evento_programado === e.id_evento_programado);
       return ev ? s.ambito.includes(institucionDeActividad(ev.id_actividad) ?? "") : false;
     };
-    let rows = ejecuciones
+    const rows = ejecuciones
       .filter(enAmbitoEjec)
       .filter((e) => (p?.id_evento_programado ? e.id_evento_programado === p.id_evento_programado : true))
       .filter((e) => (p?.control ? e.control_registro === p.control : true));
@@ -521,7 +520,7 @@ export const apiMock: ApiClient = {
       detalle = `Mismo teléfono que ${choquePorTelefono.id_persona} (${choquePorTelefono.nombre_completo}). Revisar.`;
     } else {
       // clave nueva -> nace una persona
-      const idNuevo = `PER_${String(nextId(personas.map((x) => ({ n: Number(x.id_persona.slice(4)) })) as any, "n")).padStart(5, "0")}`;
+      const idNuevo = `PER_${String(nextId(personas.map((x) => ({ n: Number(x.id_persona.slice(4)) })), "n")).padStart(5, "0")}`;
       idPersona = idNuevo;
       personas.push({
         id_persona: idNuevo,
@@ -605,7 +604,7 @@ export const apiMock: ApiClient = {
   async listarPersonas(p): Promise<Paged<Persona>> {
     await delay();
     requiereRol("coordinacion", "administrador"); // RF-PART (GET /personas solo coordinación)
-    let rows = personas.filter((x) => (p?.control ? x.control_registro === p.control : true));
+    const rows = personas.filter((x) => (p?.control ? x.control_registro === p.control : true));
     return paginar(rows, p?.page, p?.limit);
   },
 
@@ -641,7 +640,7 @@ export const apiMock: ApiClient = {
       par.id_persona = input.id_persona_destino!;
     } else {
       // confirmar como nueva persona
-      const idNuevo = `PER_${String(nextId(personas.map((x) => ({ n: Number(x.id_persona.slice(4)) })) as any, "n")).padStart(5, "0")}`;
+      const idNuevo = `PER_${String(nextId(personas.map((x) => ({ n: Number(x.id_persona.slice(4)) })), "n")).padStart(5, "0")}`;
       par.id_persona = idNuevo;
       personas.push({
         id_persona: idNuevo,
@@ -709,7 +708,7 @@ export const apiMock: ApiClient = {
   async listarMetas(p): Promise<Paged<Meta>> {
     await delay();
     requiereSesion();
-    let rows = metas.filter((m) => (p?.id_actividad ? m.id_actividad === p.id_actividad : true));
+    const rows = metas.filter((m) => (p?.id_actividad ? m.id_actividad === p.id_actividad : true));
     return paginar(rows, p?.page, p?.limit);
   },
 
@@ -779,7 +778,7 @@ export const apiMock: ApiClient = {
   async listarSolicitudes(p): Promise<Paged<Solicitud>> {
     await delay();
     requiereSesion();
-    let rows = solicitudes.filter((s) => (p?.estado ? s.estado === p.estado : true));
+    const rows = solicitudes.filter((s) => (p?.estado ? s.estado === p.estado : true));
     return paginar(rows, p?.page, p?.limit);
   },
 
@@ -825,7 +824,7 @@ export const apiMock: ApiClient = {
   async listarAuditoria(p): Promise<Paged<Auditoria>> {
     await delay();
     requiereRol("coordinacion", "administrador", "direccion");
-    let rows = auditoria.filter((a) => (p?.entidad ? a.entidad === p.entidad : true));
+    const rows = auditoria.filter((a) => (p?.entidad ? a.entidad === p.entidad : true));
     return paginar(rows, p?.page, p?.limit);
   },
 
@@ -836,7 +835,7 @@ export const apiMock: ApiClient = {
   },
 
   /* ====== Tableros ====== */
-  async tablero(tipo: TipoTablero, p?: FiltrosComunes): Promise<TableroEjecutivo> {
+  async tablero(tipo: TipoTablero, _p?: FiltrosComunes): Promise<TableroEjecutivo> {
     await delay();
     const s = requiereSesion();
     void tipo;
