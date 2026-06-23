@@ -7,7 +7,7 @@ on:
 
 jobs:
   web:
-    name: Web · typecheck · lint · build
+    name: Web · typecheck · lint · test · build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,10 +22,11 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      - run: npm run test
       - run: npm run build
 
   api:
-    name: API · lint · rutas
+    name: API · lint · stan · test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -35,9 +36,15 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
-          extensions: intl, mbstring, mysqli
+          # sqlite3: las pruebas de BD corren contra SQLite en memoria (grupo `tests`).
+          extensions: intl, mbstring, mysqli, sqlite3, json
+          coverage: none
       - run: composer install --no-interaction --prefer-dist --no-progress
       - name: PHP lint (sintaxis de app/)
         run: find app -name "*.php" -print0 | xargs -0 -n1 php -l
       - name: Smoke · listado de rutas
         run: php spark routes
+      - name: Análisis estático (PHPStan nivel 8)
+        run: composer stan
+      - name: Pruebas (PHPUnit · migraciones + seeder en SQLite)
+        run: composer test

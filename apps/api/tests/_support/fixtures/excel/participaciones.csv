@@ -1,0 +1,6 @@
+id_ejecucion,nombres,apellido_paterno,apellido_materno,anio_nacimiento,sexo,telefono,correo,colonia_persona,fecha_participacion
+100,María,García,Reyes,1992,F,6565551212,mgarcia@demo.test,Centro,2026-06-10
+100,José,Pérez,López,1990,M,6561234567,jperez@demo.test,Independencia,2026-06-10
+100,Jose,Perez,Lopez,1990,M,6561234567,jperez@demo.test,Independencia,2026-06-10
+100,Ana,Martínez,Soto,1985,F,6569876543,,Independencia,2026-06-10
+100,Mario,López,,1995,M,6565551212,#REF!,Centro,2026-06-10

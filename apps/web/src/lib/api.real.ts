@@ -15,7 +15,43 @@
  * ===================================================================== */
 import axios, { AxiosError, type AxiosInstance } from "axios";
 import type { ApiClient } from "./api";
-import { ApiError, type ErrorPayload } from "./types";
+import {
+  ApiError,
+  type Actividad,
+  type ActividadConHerencia,
+  type Alianza,
+  type Auditoria,
+  type Componente,
+  type Compromiso,
+  type DuplicadoEnCola,
+  type Eje,
+  type Ejecucion,
+  type EjecucionCreada,
+  type ErrorPayload,
+  type EventoProgramado,
+  type HitoIncidencia,
+  type Institucion,
+  type Linea,
+  type Meta,
+  type OcupacionShelter,
+  type PageMeta,
+  type Participacion,
+  type ParticipacionAgregada,
+  type ParticipacionCreada,
+  type PerfilResp,
+  type Persona,
+  type Proceso,
+  type ProcesoIncidencia,
+  type ProductoEntregable,
+  type PropuestaIncidencia,
+  type ReporteFechac,
+  type Resultado,
+  type SeguimientoMeta,
+  type SesionResp,
+  type Solicitud,
+  type SostenibilidadFinanciera,
+  type TableroEjecutivo,
+} from "./types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
@@ -44,47 +80,207 @@ http.interceptors.response.use(
   },
 );
 
-/** PENDIENTE Fase 2: implementar cada método contra los endpoints del doc 05.
- *  Se exporta el mismo tipo ApiClient para que el interruptor en index.ts compile;
- *  invocarlo antes de implementarlo lanza un error explícito en vez de fallar silencioso. */
-const noImpl = (m: string) => (): never => {
-  throw new ApiError(501, { code: "NOT_IMPLEMENTED", message: `api.real.${m} pendiente (Fase 2).` });
-};
+/** El backend emite el pager de CI4 (doc 05 §1.6); el contrato congelado usa `meta`. */
+interface BackendPager {
+  currentPage: number;
+  pageCount: number;
+  total: number;
+  perPage: number;
+}
+function toMeta(p: BackendPager): PageMeta {
+  return { page: p.currentPage, per_page: p.perPage, total: p.total, total_pages: p.pageCount };
+}
 
+/* Todos los métodos del contrato están implementados (Fases 1–4). El interruptor
+ * VITE_USE_MOCK en index.ts elige entre este cliente real y el mock. */
 export const apiReal: ApiClient = {
-  login: noImpl("login"),
-  logout: noImpl("logout"),
-  me: noImpl("me"),
-  listarActividades: noImpl("listarActividades"),
-  crearActividad: noImpl("crearActividad"),
-  reclasificarActividad: noImpl("reclasificarActividad"),
-  listarEjes: noImpl("listarEjes"),
-  listarLineas: noImpl("listarLineas"),
-  listarComponentes: noImpl("listarComponentes"),
-  listarInstituciones: noImpl("listarInstituciones"),
-  listarProcesos: noImpl("listarProcesos"),
-  crearProceso: noImpl("crearProceso"),
-  listarEventos: noImpl("listarEventos"),
-  crearEvento: noImpl("crearEvento"),
-  listarEjecuciones: noImpl("listarEjecuciones"),
-  obtenerEjecucion: noImpl("obtenerEjecucion"),
-  crearEjecucion: noImpl("crearEjecucion"),
-  validarEjecucion: noImpl("validarEjecucion"),
-  listarParticipaciones: noImpl("listarParticipaciones"),
-  crearParticipacion: noImpl("crearParticipacion"),
-  crearAgregada: noImpl("crearAgregada"),
-  listarPersonas: noImpl("listarPersonas"),
-  colaDuplicados: noImpl("colaDuplicados"),
-  resolverDuplicado: noImpl("resolverDuplicado"),
-  crearProducto: noImpl("crearProducto"),
-  listarMetas: noImpl("listarMetas"),
-  crearMeta: noImpl("crearMeta"),
-  seguimientoMetas: noImpl("seguimientoMetas"),
-  crearResultado: noImpl("crearResultado"),
-  listarSolicitudes: noImpl("listarSolicitudes"),
-  crearSolicitud: noImpl("crearSolicitud"),
-  resolverSolicitud: noImpl("resolverSolicitud"),
-  listarAuditoria: noImpl("listarAuditoria"),
-  nombreEvidencia: noImpl("nombreEvidencia"),
-  tablero: noImpl("tablero"),
+  /* ---- Auth (Sprint 1): desempaqueta el envelope { success, data } del doc 05 ---- */
+  login: async (input) => {
+    const { data } = await http.post<{ data: SesionResp }>("/auth/login", input);
+    return data.data;
+  },
+  logout: async () => {
+    await http.post("/auth/logout");
+  },
+  me: async () => {
+    const { data } = await http.get<{ data: PerfilResp }>("/auth/me");
+    return data.data;
+  },
+  /* ---- Catálogos (Sprint 2) ---- */
+  listarActividades: async (p) => {
+    const { data } = await http.get<{ data: ActividadConHerencia[]; pager: BackendPager }>(
+      "/catalogos/actividades",
+      { params: p },
+    );
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearActividad: async (input) => {
+    const { data } = await http.post<{ data: Actividad }>("/catalogos/actividades", input);
+    return data.data;
+  },
+  reclasificarActividad: async (id, input) => {
+    const { data } = await http.patch<{ data: Actividad }>(
+      `/catalogos/actividades/${id}/tipo-registro`,
+      input,
+    );
+    return data.data;
+  },
+  listarEjes: async () => (await http.get<{ data: Eje[] }>("/catalogos/ejes")).data.data,
+  listarLineas: async (p) =>
+    (await http.get<{ data: Linea[] }>("/catalogos/lineas", { params: p })).data.data,
+  listarComponentes: async (p) =>
+    (await http.get<{ data: Componente[] }>("/catalogos/componentes", { params: p })).data.data,
+  listarInstituciones: async () =>
+    (await http.get<{ data: Institucion[] }>("/catalogos/instituciones")).data.data,
+  /* ---- Cadena MEL (Sprint 3): procesos → eventos → ejecuciones → participaciones ---- */
+  listarProcesos: async (p) => {
+    const { data } = await http.get<{ data: Proceso[]; pager: BackendPager }>("/procesos", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearProceso: async (input) => {
+    const { data } = await http.post<{ data: Proceso }>("/procesos", input);
+    return data.data;
+  },
+  listarEventos: async (p) => {
+    const { data } = await http.get<{ data: EventoProgramado[]; pager: BackendPager }>("/eventos-programados", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearEvento: async (input) => {
+    const { data } = await http.post<{ data: EventoProgramado }>("/eventos-programados", input);
+    return data.data;
+  },
+  listarEjecuciones: async (p) => {
+    const { data } = await http.get<{ data: Ejecucion[]; pager: BackendPager }>("/ejecuciones", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  obtenerEjecucion: async (id) => (await http.get<{ data: Ejecucion }>(`/ejecuciones/${id}`)).data.data,
+  crearEjecucion: async (input) => {
+    const { data } = await http.post<{ data: EjecucionCreada }>("/ejecuciones", input);
+    return data.data;
+  },
+  validarEjecucion: async (id, input) => {
+    const { data } = await http.patch<{ data: Ejecucion }>(`/ejecuciones/${id}/validacion`, input);
+    return data.data;
+  },
+  listarParticipaciones: async (idEjecucion, p) => {
+    const { data } = await http.get<{ data: Participacion[]; pager: BackendPager }>(
+      `/ejecuciones/${idEjecucion}/participaciones`,
+      { params: p },
+    );
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearParticipacion: async (input) => {
+    const { data } = await http.post<{ data: ParticipacionCreada }>("/participaciones", input);
+    return data.data;
+  },
+  crearAgregada: async (input) => {
+    const { data } = await http.post<{ data: ParticipacionAgregada }>("/participaciones-agregadas", input);
+    return data.data;
+  },
+  listarPersonas: async (p) => {
+    const { data } = await http.get<{ data: Persona[]; pager: BackendPager }>("/personas", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  colaDuplicados: async (p) => {
+    const { data } = await http.get<{ data: DuplicadoEnCola[]; pager: BackendPager }>("/personas/duplicados", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  resolverDuplicado: async (idParticipacion, input) => {
+    const { data } = await http.patch<{ data: Participacion }>(`/personas/duplicados/${idParticipacion}`, input);
+    return data.data;
+  },
+  /* ---- Productos / metas / tableros (Fase 2 · Sprint 5) ---- */
+  crearProducto: async (input) => {
+    const { data } = await http.post<{ data: ProductoEntregable }>("/productos", input);
+    return data.data;
+  },
+  listarMetas: async (p) => {
+    const { data } = await http.get<{ data: Meta[]; pager: BackendPager }>("/metas", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearMeta: async (input) => {
+    const { data } = await http.post<{ data: Meta }>("/metas", input);
+    return data.data;
+  },
+  seguimientoMetas: async (p) =>
+    (await http.get<{ data: SeguimientoMeta[] }>("/metas/seguimiento", { params: p })).data.data,
+  /* ---- Resultados / gobernanza (Fase 4 · Sprint 7) ---- */
+  crearResultado: async (input) => (await http.post<{ data: Resultado }>("/resultados", input)).data.data,
+  listarSolicitudes: async (p) => {
+    const { data } = await http.get<{ data: Solicitud[]; pager: BackendPager }>("/solicitudes", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearSolicitud: async (input) => (await http.post<{ data: Solicitud }>("/solicitudes", input)).data.data,
+  resolverSolicitud: async (id, input) =>
+    (await http.patch<{ data: Solicitud }>(`/solicitudes/${id}`, input)).data.data,
+  listarAuditoria: async (p) => {
+    const { data } = await http.get<{ data: Auditoria[]; pager: BackendPager }>("/auditoria", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  nombreEvidencia: async (p) =>
+    (await http.get<{ data: { nombre: string } }>("/evidencias/nombre", { params: p })).data.data,
+  tablero: async (tipo, p) =>
+    (await http.get<{ data: TableroEjecutivo }>(`/tableros/${tipo}`, { params: p })).data.data,
+
+  /* ---- Incidencia (Fase 3 · Sprint 6) ---- */
+  listarPropuestasIncidencia: async (p) => {
+    const { data } = await http.get<{ data: PropuestaIncidencia[]; pager: BackendPager }>("/incidencia/propuestas", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearPropuestaIncidencia: async (input) =>
+    (await http.post<{ data: PropuestaIncidencia }>("/incidencia/propuestas", input)).data.data,
+  listarProcesosIncidencia: async (p) => {
+    const { data } = await http.get<{ data: ProcesoIncidencia[]; pager: BackendPager }>("/incidencia/procesos", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearProcesoIncidencia: async (input) =>
+    (await http.post<{ data: ProcesoIncidencia }>("/incidencia/procesos", input)).data.data,
+  listarCompromisos: async (p) => {
+    const { data } = await http.get<{ data: Compromiso[]; pager: BackendPager }>("/incidencia/compromisos", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearCompromiso: async (input) =>
+    (await http.post<{ data: Compromiso }>("/incidencia/compromisos", input)).data.data,
+  listarAlianzas: async (p) => {
+    const { data } = await http.get<{ data: Alianza[]; pager: BackendPager }>("/incidencia/alianzas", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearAlianza: async (input) => (await http.post<{ data: Alianza }>("/incidencia/alianzas", input)).data.data,
+  listarHitos: async (p) => {
+    const { data } = await http.get<{ data: HitoIncidencia[]; pager: BackendPager }>("/incidencia/hitos", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearHito: async (input) => (await http.post<{ data: HitoIncidencia }>("/incidencia/hitos", input)).data.data,
+
+  /* ---- Verticales (Fase 3 · Sprint 6) ---- */
+  listarOcupacionShelter: async (p) => {
+    const { data } = await http.get<{ data: OcupacionShelter[]; pager: BackendPager }>("/shelter/ocupacion", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearOcupacionShelter: async (input) =>
+    (await http.post<{ data: OcupacionShelter }>("/shelter/ocupacion", input)).data.data,
+  listarSostenibilidad: async (p) => {
+    const { data } = await http.get<{ data: SostenibilidadFinanciera[]; pager: BackendPager }>("/sostenibilidad", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearSostenibilidad: async (input) =>
+    (await http.post<{ data: SostenibilidadFinanciera }>("/sostenibilidad", input)).data.data,
+
+  /* ---- Exportación FECHAC (Fase 4 · Sprint 7) ---- */
+  exportarFechac: async (p) =>
+    (await http.get<{ data: ReporteFechac }>("/export/fechac", { params: p })).data.data,
 };

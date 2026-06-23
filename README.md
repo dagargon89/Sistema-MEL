@@ -56,14 +56,34 @@ cp env.example .env             # rellenar secretos
 php spark serve                 # http://localhost:8080  → GET /api/v1/health
 ```
 
-## Estado (Fase 0 — en progreso)
+## Estado (Fases 0–4 completas — MVP funcional)
+
+Las **cuatro fases del roadmap** (Sprints 0–7) están implementadas y verificadas (CI verde): backend
+CI4 + SPA contra el contrato congelado. Pendiente solo la puesta en operación (MySQL/Redis, carga real,
+hardening) — ver [`PRODUCCION.md`](PRODUCCION.md).
 
 | Pista | Entregable | Estado |
 |---|---|---|
 | B (SPA) | Scaffold + biblioteca de componentes + 19 pantallas contra el mock | ✅ navegable y verificado |
 | A (infra) | Monorepo, `docker-compose`, CI | ✅ |
 | A (API) | Scaffold CI4 + ruta `/api/v1/health` | ✅ responde 200 |
-| A (datos) | Migraciones base del esquema (doc 03) | ⏳ siguiente |
-| A (auth) | Shield + RBAC + segmentación (Sprint 1) | ⏳ Fase 1 |
+| A (datos) | Migraciones base (dimensiones + gobernanza) + **cadena MEL** (procesos→…→personas), FK RESTRICT | ✅ verificado en SQLite (PHPUnit) |
+| A (calidad) | Gates en CI: PHPUnit + PHPStan nivel 8 (api), Vitest (web) | ✅ |
+| A (auth) · Sprint 1 | Shield (access tokens) + RBAC + segmentación por institución (ADR-004) | ✅ |
+| A (catálogos) · Sprint 2 | Actividades con herencia + alta/reclasificación auditada; dimensiones | ✅ cableado en `api.real.ts` |
+| A (cadena MEL) · Sprint 3 | Procesos→eventos→ejecuciones→participaciones, máquina de estados, **deduplicación** (ADR-003) | ✅ cableado en `api.real.ts` |
+| A (migración) · Sprint 4 | `spark mel:import` (limpia `#REF!`, descarta plantillas, regenera personas, **concilia**) | ✅ mecanismo verificado vs fixture |
+| A (metas/tableros) · Sprint 5 | Metas POA + seguimiento (semáforo 90/75, casos C/D), productos tipo E, tableros sobre `control=OK` | ✅ cableado en `api.real.ts` |
+| A+B (incidencia/verticales) · Sprint 6 | Incidencia (RN-004) + shelter/sostenibilidad (indicadores calculados); **contrato ampliado** (api.ts/mock/real) | ✅ cableado en `api.real.ts` |
+| A+B (resultados/gobernanza) · Sprint 7 | Resultados tipo R, solicitudes, auditoría, **reporte FECHAC**; contrato completo (49 métodos) | ✅ cableado en `api.real.ts` |
+
+> **Carga real (fuera de este entorno):** colocar los CSV del Excel v1.9 en `apps/api/data/excel/`
+> (PII, no se versionan) y correr `php spark mel:import` contra **MySQL real** (`docker compose up`);
+> la conciliación debe cuadrar con la línea base ≈988/762/279/132 (doc 06 §4). Aquí el mecanismo se
+> valida en SQLite con un fixture representativo. Pendiente también la **sesión de validación de UX**
+> con Coordinación MEL (doc 09 §8).
+>
+> **Lanzamiento:** completar el checklist operativo de [`PRODUCCION.md`](PRODUCCION.md) en el VPS
+> (MySQL/Redis, `mel:import` con conciliación, HTTPS/hardening, respaldos, auditoría de seguridad).
 
 El plan por fases completo está descrito en [`Sistema MEL/07-roadmap`](Sistema%20MEL/07-roadmap/07_roadmap_sprints.md).

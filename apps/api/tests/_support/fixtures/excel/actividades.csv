@@ -1,0 +1,5 @@
+id_actividad,num_actividad,nombre,id_eje,id_linea,id_componente,id_institucion,tipo_registro,caso_excepcional
+ACT_001,1,Taller de participación,EJE_00001,LIN_00001,COM_00001,INS_00001,P,#REF!
+ACT_002,2,Informe entregable,EJE_00001,LIN_00001,COM_00001,INS_00001,E,
+ACT_003,3,Medición de resultado,EJE_00001,LIN_00001,COM_00001,INS_00001,R,
+,,PLANTILLA - no usar (fila de ejemplo del Excel),,,,,,

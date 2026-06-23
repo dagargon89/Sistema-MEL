@@ -46,6 +46,12 @@ $RECYCLE.BIN/
 Vagrantfile
 
 #-------------------------
+# Datos de migración (PII del Excel v1.9)
+#-------------------------
+# Los CSV reales para `spark mel:import` contienen PII y NO se versionan.
+/data/excel/*.csv
+
+#-------------------------
 # Temporary Files
 #-------------------------
 /writable/cache/*
