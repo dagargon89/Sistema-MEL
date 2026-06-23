@@ -208,6 +208,191 @@ final class Shape
         ];
     }
 
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function propuestaIncidencia(array $r): array
+    {
+        return [
+            'id_propuesta'                    => self::iReq($r, 'id_propuesta'),
+            'nombre_propuesta'                => self::sReq($r, 'nombre_propuesta'),
+            'promotor_colectivo'              => self::s($r, 'promotor_colectivo'),
+            'tipo_actor'                      => self::s($r, 'tipo_actor'),
+            'fecha_inicio_asesoria'           => self::s($r, 'fecha_inicio_asesoria'),
+            'responsable_equipo'              => self::s($r, 'responsable_equipo'),
+            'sesiones_documentadas'           => self::i($r, 'sesiones_documentadas'),
+            'mejora_documentada'              => self::b($r, 'mejora_documentada'),
+            'cambios_resultado_asesoria'      => self::s($r, 'cambios_resultado_asesoria'),
+            'evidencia_principal'             => self::s($r, 'evidencia_principal'),
+            'alineada_proyectos_estrategicos' => self::b($r, 'alineada_proyectos_estrategicos'),
+            'criterios_alineacion_nota'       => self::s($r, 'criterios_alineacion_nota'),
+            'estatus'                         => self::sReq($r, 'estatus'),
+            'elegible_reporte'                => self::b($r, 'elegible_reporte'),
+            'id_actividad'                    => self::sReq($r, 'id_actividad'),
+            'periodo_reporte'                 => self::s($r, 'periodo_reporte'),
+            'control_registro'                => self::sReq($r, 'control_registro'),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function procesoIncidencia(array $r): array
+    {
+        return [
+            'id_proceso_incidencia'  => self::iReq($r, 'id_proceso_incidencia'),
+            'nombre'                 => self::sReq($r, 'nombre'),
+            'criterios_elegibilidad' => self::s($r, 'criterios_elegibilidad'),
+            'ultimo_hito_resumen'    => self::s($r, 'ultimo_hito_resumen'),
+            'control_registro'       => self::sReq($r, 'control_registro'),
+            'id_actividad'           => self::sReq($r, 'id_actividad'),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function compromiso(array $r): array
+    {
+        return [
+            'id_compromiso'           => self::iReq($r, 'id_compromiso'),
+            'id_proceso_incidencia'   => self::iReq($r, 'id_proceso_incidencia'),
+            'identificacion'          => self::s($r, 'identificacion'),
+            'seguimiento_documentado' => self::s($r, 'seguimiento_documentado'),
+            'criterios_elegibilidad'  => self::s($r, 'criterios_elegibilidad'),
+            'control_registro'        => self::sReq($r, 'control_registro'),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function alianza(array $r): array
+    {
+        return [
+            'id_alianza'             => self::iReq($r, 'id_alianza'),
+            'nombre_alianza'         => self::sReq($r, 'nombre_alianza'),
+            'datos_alianza'          => self::s($r, 'datos_alianza'),
+            'criterios_elegibilidad' => self::s($r, 'criterios_elegibilidad'),
+            'id_actividad'           => self::sReq($r, 'id_actividad'),
+            'control_registro'       => self::sReq($r, 'control_registro'),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function hito(array $r): array
+    {
+        return [
+            'id_hito'                 => self::iReq($r, 'id_hito'),
+            'id_proceso_incidencia'   => self::iReq($r, 'id_proceso_incidencia'),
+            'fecha_hito'              => self::s($r, 'fecha_hito'),
+            'tipo_hito'               => self::s($r, 'tipo_hito'),
+            'descripcion_hito'        => self::s($r, 'descripcion_hito'),
+            'evidencia_nombre_o_nota' => self::s($r, 'evidencia_nombre_o_nota'),
+            'registrado_por'          => self::i($r, 'registrado_por'),
+            'observaciones'           => self::s($r, 'observaciones'),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function ocupacion(array $r): array
+    {
+        $cap = self::iReq($r, 'capacidad_instalada');
+        $occ = self::iReq($r, 'ocupacion');
+
+        return [
+            'id_ocupacion'        => self::iReq($r, 'id_ocupacion'),
+            'id_actividad'        => self::sReq($r, 'id_actividad'),
+            'mes_periodo'         => self::sReq($r, 'mes_periodo'),
+            'tipo_espacio'        => self::s($r, 'tipo_espacio'),
+            'capacidad_instalada' => $cap,
+            'ocupacion'           => $occ,
+            'pct_ocupacion'       => $cap > 0 ? round($occ / $cap * 1000) / 10 : null,
+            'fuente'              => self::s($r, 'fuente'),
+            'control_registro'    => self::sReq($r, 'control_registro'),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function sostenibilidad(array $r): array
+    {
+        $ingresos = self::fReq($r, 'ingresos_brutos');
+        $cd       = self::fReq($r, 'costos_directos');
+        $ci       = self::fReq($r, 'costos_indirectos');
+        $efectivo = self::fReq($r, 'recursos_efectivo');
+        $especie  = self::fReq($r, 'recursos_especie');
+        $meta     = self::fReq($r, 'meta_anual');
+        $pct      = $meta > 0 ? round($ingresos / $meta * 1000) / 10 : null;
+
+        return [
+            'id_registro'         => self::iReq($r, 'id_registro'),
+            'id_actividad'        => self::sReq($r, 'id_actividad'),
+            'mes_periodo'         => self::sReq($r, 'mes_periodo'),
+            'ingresos_brutos'     => $ingresos,
+            'costos_directos'     => $cd,
+            'costos_indirectos'   => $ci,
+            'recursos_efectivo'   => $efectivo,
+            'recursos_especie'    => $especie,
+            'fuente_datos'        => self::s($r, 'fuente_datos'),
+            'meta_anual'          => $meta,
+            'control_registro'    => self::sReq($r, 'control_registro'),
+            'utilidad_neta_mes'   => $ingresos - $cd - $ci,
+            'recursos_totales_mes' => $efectivo + $especie,
+            'pct_avance_anual'    => $pct,
+            'semaforo'            => self::semaforoFinanciero($meta, $pct),
+        ];
+    }
+
+    /** Semáforo de sostenibilidad por % de avance anual (90/75), espejo del seguimiento. */
+    private static function semaforoFinanciero(float $meta, ?float $pct): string
+    {
+        if ($meta <= 0.0 || $pct === null) {
+            return 'SIN_META';
+        }
+        if ($pct >= 90.0) {
+            return 'VERDE';
+        }
+        if ($pct >= 75.0) {
+            return 'AMARILLO';
+        }
+
+        return 'ROJO';
+    }
+
+    /** @param array<string, mixed> $r */
+    private static function b(array $r, string $key): bool
+    {
+        $v = $r[$key] ?? null;
+
+        return $v === true || $v === 1 || $v === '1';
+    }
+
+    /** @param array<string, mixed> $r */
+    private static function fReq(array $r, string $key): float
+    {
+        return self::f($r, $key) ?? 0.0;
+    }
+
     /** @param array<string, mixed> $r */
     private static function f(array $r, string $key): ?float
     {

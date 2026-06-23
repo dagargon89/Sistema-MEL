@@ -33,4 +33,24 @@ abstract class BaseScopedRepository
 
         return $builder->whereIn($columna, $ambito);
     }
+
+    /**
+     * Aplica ámbito + orden y devuelve una página (cuenta total sin paginar). Reutilizable
+     * por los Repositories de listados acotados (doc 05 §1.6).
+     *
+     * @param 'ALL'|list<string> $ambito
+     *
+     * @return array{rows: list<array<string, mixed>>, total: int}
+     */
+    protected function paginarScoped(BaseBuilder $builder, array|string $ambito, string $columna, string $orderBy, int $page, int $limit): array
+    {
+        $builder = $this->aplicarAmbito($builder, $ambito, $columna)->orderBy($orderBy, 'ASC');
+        $total   = (int) $builder->countAllResults(false);
+        $result  = $builder->get($limit, ($page - 1) * $limit);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $result === false ? [] : $result->getResultArray();
+
+        return ['rows' => $rows, 'total' => $total];
+    }
 }

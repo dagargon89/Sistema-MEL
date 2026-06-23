@@ -19,16 +19,20 @@ import {
   ApiError,
   type Actividad,
   type ActividadConHerencia,
+  type Alianza,
   type Componente,
+  type Compromiso,
   type DuplicadoEnCola,
   type Eje,
   type Ejecucion,
   type EjecucionCreada,
   type ErrorPayload,
   type EventoProgramado,
+  type HitoIncidencia,
   type Institucion,
   type Linea,
   type Meta,
+  type OcupacionShelter,
   type PageMeta,
   type Participacion,
   type ParticipacionAgregada,
@@ -36,9 +40,12 @@ import {
   type PerfilResp,
   type Persona,
   type Proceso,
+  type ProcesoIncidencia,
   type ProductoEntregable,
+  type PropuestaIncidencia,
   type SeguimientoMeta,
   type SesionResp,
+  type SostenibilidadFinanciera,
   type TableroEjecutivo,
 } from "./types";
 
@@ -211,4 +218,58 @@ export const apiReal: ApiClient = {
     (await http.get<{ data: { nombre: string } }>("/evidencias/nombre", { params: p })).data.data,
   tablero: async (tipo, p) =>
     (await http.get<{ data: TableroEjecutivo }>(`/tableros/${tipo}`, { params: p })).data.data,
+
+  /* ---- Incidencia (Fase 3 · Sprint 6) ---- */
+  listarPropuestasIncidencia: async (p) => {
+    const { data } = await http.get<{ data: PropuestaIncidencia[]; pager: BackendPager }>("/incidencia/propuestas", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearPropuestaIncidencia: async (input) =>
+    (await http.post<{ data: PropuestaIncidencia }>("/incidencia/propuestas", input)).data.data,
+  listarProcesosIncidencia: async (p) => {
+    const { data } = await http.get<{ data: ProcesoIncidencia[]; pager: BackendPager }>("/incidencia/procesos", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearProcesoIncidencia: async (input) =>
+    (await http.post<{ data: ProcesoIncidencia }>("/incidencia/procesos", input)).data.data,
+  listarCompromisos: async (p) => {
+    const { data } = await http.get<{ data: Compromiso[]; pager: BackendPager }>("/incidencia/compromisos", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearCompromiso: async (input) =>
+    (await http.post<{ data: Compromiso }>("/incidencia/compromisos", input)).data.data,
+  listarAlianzas: async (p) => {
+    const { data } = await http.get<{ data: Alianza[]; pager: BackendPager }>("/incidencia/alianzas", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearAlianza: async (input) => (await http.post<{ data: Alianza }>("/incidencia/alianzas", input)).data.data,
+  listarHitos: async (p) => {
+    const { data } = await http.get<{ data: HitoIncidencia[]; pager: BackendPager }>("/incidencia/hitos", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearHito: async (input) => (await http.post<{ data: HitoIncidencia }>("/incidencia/hitos", input)).data.data,
+
+  /* ---- Verticales (Fase 3 · Sprint 6) ---- */
+  listarOcupacionShelter: async (p) => {
+    const { data } = await http.get<{ data: OcupacionShelter[]; pager: BackendPager }>("/shelter/ocupacion", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearOcupacionShelter: async (input) =>
+    (await http.post<{ data: OcupacionShelter }>("/shelter/ocupacion", input)).data.data,
+  listarSostenibilidad: async (p) => {
+    const { data } = await http.get<{ data: SostenibilidadFinanciera[]; pager: BackendPager }>("/sostenibilidad", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearSostenibilidad: async (input) =>
+    (await http.post<{ data: SostenibilidadFinanciera }>("/sostenibilidad", input)).data.data,
 };

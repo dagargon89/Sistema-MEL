@@ -596,6 +596,78 @@ export interface SolicitudPatchInput {
 }
 
 /* ---------------------------------------------------------------------
+ * 7b. Inputs de incidencia y verticales (doc 05 §8–§9, extensión Fase 3)
+ * ------------------------------------------------------------------- */
+export interface PropuestaIncidenciaInput {
+  id_actividad: string;
+  nombre_propuesta: string;
+  promotor_colectivo?: string | null;
+  tipo_actor?: string | null;
+  fecha_inicio_asesoria?: string | null;
+  responsable_equipo?: string | null;
+  sesiones_documentadas?: number | null;
+  mejora_documentada?: boolean;
+  cambios_resultado_asesoria?: string | null;
+  evidencia_principal?: string | null;
+  alineada_proyectos_estrategicos?: boolean;
+  criterios_alineacion_nota?: string | null;
+  estatus?: string;
+  elegible_reporte?: boolean;
+  periodo_reporte?: MesPOA | null;
+}
+
+export interface ProcesoIncidenciaInput {
+  id_actividad: string;
+  nombre: string;
+  criterios_elegibilidad?: string | null;
+  ultimo_hito_resumen?: string | null;
+}
+
+export interface CompromisoInput {
+  id_proceso_incidencia: number;
+  identificacion?: string | null;
+  seguimiento_documentado?: string | null;
+  criterios_elegibilidad?: string | null;
+}
+
+export interface AlianzaInput {
+  id_actividad: string;
+  nombre_alianza: string;
+  datos_alianza?: string | null;
+  criterios_elegibilidad?: string | null;
+}
+
+export interface HitoIncidenciaInput {
+  id_proceso_incidencia: number;
+  fecha_hito?: string | null;
+  tipo_hito?: string | null;
+  descripcion_hito?: string | null;
+  evidencia_nombre_o_nota?: string | null;
+  observaciones?: string | null;
+}
+
+export interface OcupacionShelterInput {
+  id_actividad: string;
+  mes_periodo: MesPOA;
+  tipo_espacio?: string | null;
+  capacidad_instalada: number;
+  ocupacion: number;
+  fuente?: string | null;
+}
+
+export interface SostenibilidadInput {
+  id_actividad: string;
+  mes_periodo: MesPOA;
+  ingresos_brutos?: number;
+  costos_directos?: number;
+  costos_indirectos?: number;
+  recursos_efectivo?: number;
+  recursos_especie?: number;
+  fuente_datos?: string | null;
+  meta_anual?: number;
+}
+
+/* ---------------------------------------------------------------------
  * 8. Seguimiento de metas y tableros (doc 05 §7, §12)
  * ------------------------------------------------------------------- */
 export type Semaforo =

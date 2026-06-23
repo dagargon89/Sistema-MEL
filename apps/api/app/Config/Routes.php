@@ -69,5 +69,24 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api'], static function
 
         // Tableros con KPIs reales (control=OK), acotados al ámbito.
         $routes->get('tableros/(:segment)', 'TableroController::ver/$1', ['filter' => 'throttle:read']);
+
+        // --- Fase 3 · Sprint 6: incidencia y verticales ---
+        // Incidencia (doc 05 §8): compromisos/hitos exigen proceso de incidencia válido (RN-004).
+        $routes->get('incidencia/propuestas', 'IncidenciaController::propuestasIndex', ['filter' => 'throttle:read']);
+        $routes->post('incidencia/propuestas', 'IncidenciaController::propuestasCreate', ['filter' => 'throttle:write']);
+        $routes->get('incidencia/procesos', 'IncidenciaController::procesosIndex', ['filter' => 'throttle:read']);
+        $routes->post('incidencia/procesos', 'IncidenciaController::procesosCreate', ['filter' => 'throttle:write']);
+        $routes->get('incidencia/compromisos', 'IncidenciaController::compromisosIndex', ['filter' => 'throttle:read']);
+        $routes->post('incidencia/compromisos', 'IncidenciaController::compromisosCreate', ['filter' => 'throttle:write']);
+        $routes->get('incidencia/alianzas', 'IncidenciaController::alianzasIndex', ['filter' => 'throttle:read']);
+        $routes->post('incidencia/alianzas', 'IncidenciaController::alianzasCreate', ['filter' => 'throttle:write']);
+        $routes->get('incidencia/hitos', 'IncidenciaController::hitosIndex', ['filter' => 'throttle:read']);
+        $routes->post('incidencia/hitos', 'IncidenciaController::hitosCreate', ['filter' => 'throttle:write']);
+
+        // Verticales (doc 05 §9): el % de ocupación y los indicadores financieros se calculan.
+        $routes->get('shelter/ocupacion', 'VerticalController::ocupacionIndex', ['filter' => 'throttle:read']);
+        $routes->post('shelter/ocupacion', 'VerticalController::ocupacionCreate', ['filter' => 'throttle:write']);
+        $routes->get('sostenibilidad', 'VerticalController::sostenibilidadIndex', ['filter' => 'throttle:read']);
+        $routes->post('sostenibilidad', 'VerticalController::sostenibilidadCreate', ['filter' => 'throttle:write']);
     });
 });

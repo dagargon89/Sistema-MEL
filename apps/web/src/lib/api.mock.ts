@@ -14,6 +14,20 @@
 import type { ApiClient, FiltrosComunes, PageParams } from "./api";
 import {
   ApiError,
+  type Alianza,
+  type AlianzaInput,
+  type Compromiso,
+  type CompromisoInput,
+  type HitoIncidencia,
+  type HitoIncidenciaInput,
+  type OcupacionShelter,
+  type OcupacionShelterInput,
+  type ProcesoIncidencia,
+  type ProcesoIncidenciaInput,
+  type PropuestaIncidencia,
+  type PropuestaIncidenciaInput,
+  type SostenibilidadFinanciera,
+  type SostenibilidadInput,
   type Actividad,
   type ActividadConHerencia,
   type Auditoria,
@@ -86,6 +100,13 @@ const usuarios = tabla<Usuario>("usuarios");
 const usuarioInstitucion = tabla<UsuarioInstitucion>("usuario_institucion");
 const solicitudes = tabla<Solicitud>("solicitudes");
 const auditoria = tabla<Auditoria>("auditoria");
+const propuestasIncidencia = tabla<PropuestaIncidencia>("propuestas_incidencia");
+const procesosIncidencia = tabla<ProcesoIncidencia>("procesos_incidencia");
+const compromisos = tabla<Compromiso>("compromisos");
+const alianzas = tabla<Alianza>("alianzas");
+const hitosIncidencia = tabla<HitoIncidencia>("hitos_incidencia");
+const ocupacionShelter = tabla<OcupacionShelter>("ocupacion_shelter");
+const sostenibilidad = tabla<SostenibilidadFinanciera>("sostenibilidad_financiera");
 
 /* ---------------------------------------------------------------------
  * Sesión simulada y utilidades
@@ -117,6 +138,32 @@ const actividadDe = (id: string): Actividad | undefined =>
 /** Institución heredada de un registro vía su actividad (doc 03 §2). */
 const institucionDeActividad = (idActividad: string): string | null =>
   actividadDe(idActividad)?.id_institucion ?? null;
+
+/** Institución heredada de un proceso de incidencia vía su actividad. */
+const institucionDeProcesoIncidencia = (id: number): string | null => {
+  const pi = procesosIncidencia.find((x) => x.id_proceso_incidencia === id);
+  return pi ? institucionDeActividad(pi.id_actividad) : null;
+};
+
+/** % de ocupación calculado (doc 03 §3.6). */
+const conPctOcupacion = (o: OcupacionShelter): OcupacionShelter => ({
+  ...o,
+  pct_ocupacion: o.capacidad_instalada > 0 ? Math.round((o.ocupacion / o.capacidad_instalada) * 1000) / 10 : null,
+});
+
+/** Indicadores financieros calculados (doc 03 §3.6). */
+const conIndicadoresFinancieros = (s: SostenibilidadFinanciera): SostenibilidadFinanciera => {
+  const pct = s.meta_anual > 0 ? Math.round((s.ingresos_brutos / s.meta_anual) * 1000) / 10 : undefined;
+  const semaforo: Semaforo =
+    s.meta_anual <= 0 || pct === undefined ? "SIN_META" : pct >= 90 ? "VERDE" : pct >= 75 ? "AMARILLO" : "ROJO";
+  return {
+    ...s,
+    utilidad_neta_mes: s.ingresos_brutos - s.costos_directos - s.costos_indirectos,
+    recursos_totales_mes: s.recursos_efectivo + s.recursos_especie,
+    pct_avance_anual: pct,
+    semaforo,
+  };
+};
 
 /** ¿La actividad está dentro del ámbito de la sesión? Coordinación/dirección/admin globales si su ámbito cubre todo. */
 function enAmbito(idActividad: string): boolean {
@@ -885,6 +932,209 @@ export const apiMock: ApiClient = {
       ejecuciones: ejecCount,
       cumplimiento_ejecucion: eventosProgramados === 0 ? 0 : Math.round((ejecCount / eventosProgramados) * 100) / 100,
     };
+  },
+
+  /* ====== Incidencia (Fase 3) ====== */
+  async listarPropuestasIncidencia(p): Promise<Paged<PropuestaIncidencia>> {
+    await delay();
+    const s = requiereSesion();
+    const rows = propuestasIncidencia.filter((x) => s.ambito.includes(institucionDeActividad(x.id_actividad) ?? ""));
+    return paginar(rows, p?.page, p?.limit);
+  },
+
+  async crearPropuestaIncidencia(input: PropuestaIncidenciaInput): Promise<PropuestaIncidencia> {
+    await delay();
+    requiereSesion();
+    if (!actividadDe(input.id_actividad)) err(422, "Datos inválidos.", { id_actividad: "Actividad inexistente." });
+    if (!enAmbito(input.id_actividad)) err(403, "Fuera de su ámbito de institución.");
+    const nueva: PropuestaIncidencia = {
+      id_propuesta: nextId(propuestasIncidencia, "id_propuesta"),
+      nombre_propuesta: input.nombre_propuesta,
+      promotor_colectivo: input.promotor_colectivo ?? null,
+      tipo_actor: input.tipo_actor ?? null,
+      fecha_inicio_asesoria: input.fecha_inicio_asesoria ?? null,
+      responsable_equipo: input.responsable_equipo ?? null,
+      sesiones_documentadas: input.sesiones_documentadas ?? null,
+      mejora_documentada: input.mejora_documentada ?? false,
+      cambios_resultado_asesoria: input.cambios_resultado_asesoria ?? null,
+      evidencia_principal: input.evidencia_principal ?? null,
+      alineada_proyectos_estrategicos: input.alineada_proyectos_estrategicos ?? false,
+      criterios_alineacion_nota: input.criterios_alineacion_nota ?? null,
+      estatus: input.estatus ?? "activo",
+      elegible_reporte: input.elegible_reporte ?? false,
+      id_actividad: input.id_actividad,
+      periodo_reporte: input.periodo_reporte ?? null,
+      control_registro: "CAPTURADO",
+    };
+    propuestasIncidencia.push(nueva);
+    auditar("propuestas_incidencia", String(nueva.id_propuesta), "alta", null, { control_registro: nueva.control_registro });
+    return nueva;
+  },
+
+  async listarProcesosIncidencia(p): Promise<Paged<ProcesoIncidencia>> {
+    await delay();
+    const s = requiereSesion();
+    const rows = procesosIncidencia.filter((x) => s.ambito.includes(institucionDeActividad(x.id_actividad) ?? ""));
+    return paginar(rows, p?.page, p?.limit);
+  },
+
+  async crearProcesoIncidencia(input: ProcesoIncidenciaInput): Promise<ProcesoIncidencia> {
+    await delay();
+    requiereSesion();
+    if (!actividadDe(input.id_actividad)) err(422, "Datos inválidos.", { id_actividad: "Actividad inexistente." });
+    if (!enAmbito(input.id_actividad)) err(403, "Fuera de su ámbito de institución.");
+    const nuevo: ProcesoIncidencia = {
+      id_proceso_incidencia: nextId(procesosIncidencia, "id_proceso_incidencia"),
+      nombre: input.nombre,
+      criterios_elegibilidad: input.criterios_elegibilidad ?? null,
+      ultimo_hito_resumen: input.ultimo_hito_resumen ?? null,
+      control_registro: "CAPTURADO",
+      id_actividad: input.id_actividad,
+    };
+    procesosIncidencia.push(nuevo);
+    auditar("procesos_incidencia", String(nuevo.id_proceso_incidencia), "alta", null, { control_registro: nuevo.control_registro });
+    return nuevo;
+  },
+
+  async listarCompromisos(p): Promise<Paged<Compromiso>> {
+    await delay();
+    const s = requiereSesion();
+    const rows = compromisos.filter((c) => s.ambito.includes(institucionDeProcesoIncidencia(c.id_proceso_incidencia) ?? ""));
+    return paginar(rows, p?.page, p?.limit);
+  },
+
+  async crearCompromiso(input: CompromisoInput): Promise<Compromiso> {
+    await delay();
+    const s = requiereSesion();
+    const inst = institucionDeProcesoIncidencia(input.id_proceso_incidencia);
+    if (!inst) err(422, "Datos inválidos.", { id_proceso_incidencia: "El proceso de incidencia no existe." });
+    if (!s.ambito.includes(inst)) err(403, "Fuera de su ámbito de institución.");
+    const nuevo: Compromiso = {
+      id_compromiso: nextId(compromisos, "id_compromiso"),
+      id_proceso_incidencia: input.id_proceso_incidencia,
+      identificacion: input.identificacion ?? null,
+      seguimiento_documentado: input.seguimiento_documentado ?? null,
+      criterios_elegibilidad: input.criterios_elegibilidad ?? null,
+      control_registro: "CAPTURADO",
+    };
+    compromisos.push(nuevo);
+    auditar("compromisos", String(nuevo.id_compromiso), "alta", null, { control_registro: nuevo.control_registro });
+    return nuevo;
+  },
+
+  async listarAlianzas(p): Promise<Paged<Alianza>> {
+    await delay();
+    const s = requiereSesion();
+    const rows = alianzas.filter((a) => s.ambito.includes(institucionDeActividad(a.id_actividad) ?? ""));
+    return paginar(rows, p?.page, p?.limit);
+  },
+
+  async crearAlianza(input: AlianzaInput): Promise<Alianza> {
+    await delay();
+    requiereSesion();
+    if (!actividadDe(input.id_actividad)) err(422, "Datos inválidos.", { id_actividad: "Actividad inexistente." });
+    if (!enAmbito(input.id_actividad)) err(403, "Fuera de su ámbito de institución.");
+    const nueva: Alianza = {
+      id_alianza: nextId(alianzas, "id_alianza"),
+      nombre_alianza: input.nombre_alianza,
+      datos_alianza: input.datos_alianza ?? null,
+      criterios_elegibilidad: input.criterios_elegibilidad ?? null,
+      id_actividad: input.id_actividad,
+      control_registro: "CAPTURADO",
+    };
+    alianzas.push(nueva);
+    auditar("alianzas", String(nueva.id_alianza), "alta", null, { control_registro: nueva.control_registro });
+    return nueva;
+  },
+
+  async listarHitos(p): Promise<Paged<HitoIncidencia>> {
+    await delay();
+    const s = requiereSesion();
+    const rows = hitosIncidencia.filter((h) => s.ambito.includes(institucionDeProcesoIncidencia(h.id_proceso_incidencia) ?? ""));
+    return paginar(rows, p?.page, p?.limit);
+  },
+
+  async crearHito(input: HitoIncidenciaInput): Promise<HitoIncidencia> {
+    await delay();
+    const s = requiereSesion();
+    const inst = institucionDeProcesoIncidencia(input.id_proceso_incidencia);
+    if (!inst) err(422, "Datos inválidos.", { id_proceso_incidencia: "El proceso de incidencia no existe." });
+    if (!s.ambito.includes(inst)) err(403, "Fuera de su ámbito de institución.");
+    const nuevo: HitoIncidencia = {
+      id_hito: nextId(hitosIncidencia, "id_hito"),
+      id_proceso_incidencia: input.id_proceso_incidencia,
+      fecha_hito: input.fecha_hito ?? null,
+      tipo_hito: input.tipo_hito ?? null,
+      descripcion_hito: input.descripcion_hito ?? null,
+      evidencia_nombre_o_nota: input.evidencia_nombre_o_nota ?? null,
+      registrado_por: sesionActual?.user_id ?? null,
+      observaciones: input.observaciones ?? null,
+    };
+    hitosIncidencia.push(nuevo);
+    auditar("hitos_incidencia", String(nuevo.id_hito), "alta", null, { tipo_hito: nuevo.tipo_hito });
+    return nuevo;
+  },
+
+  /* ====== Verticales (Fase 3) ====== */
+  async listarOcupacionShelter(p): Promise<Paged<OcupacionShelter>> {
+    await delay();
+    const s = requiereSesion();
+    const rows = ocupacionShelter
+      .filter((o) => s.ambito.includes(institucionDeActividad(o.id_actividad) ?? ""))
+      .map(conPctOcupacion);
+    return paginar(rows, p?.page, p?.limit);
+  },
+
+  async crearOcupacionShelter(input: OcupacionShelterInput): Promise<OcupacionShelter> {
+    await delay();
+    requiereSesion();
+    if (!actividadDe(input.id_actividad)) err(422, "Datos inválidos.", { id_actividad: "Actividad inexistente." });
+    if (!enAmbito(input.id_actividad)) err(403, "Fuera de su ámbito de institución.");
+    const nueva: OcupacionShelter = {
+      id_ocupacion: nextId(ocupacionShelter, "id_ocupacion"),
+      id_actividad: input.id_actividad,
+      mes_periodo: input.mes_periodo,
+      tipo_espacio: input.tipo_espacio ?? null,
+      capacidad_instalada: input.capacidad_instalada,
+      ocupacion: input.ocupacion,
+      fuente: input.fuente ?? null,
+      control_registro: "AGREGADO",
+    };
+    ocupacionShelter.push(nueva);
+    auditar("ocupacion_shelter", String(nueva.id_ocupacion), "alta", null, { control_registro: "AGREGADO" });
+    return conPctOcupacion(nueva);
+  },
+
+  async listarSostenibilidad(p): Promise<Paged<SostenibilidadFinanciera>> {
+    await delay();
+    const s = requiereSesion();
+    const rows = sostenibilidad
+      .filter((x) => s.ambito.includes(institucionDeActividad(x.id_actividad) ?? ""))
+      .map(conIndicadoresFinancieros);
+    return paginar(rows, p?.page, p?.limit);
+  },
+
+  async crearSostenibilidad(input: SostenibilidadInput): Promise<SostenibilidadFinanciera> {
+    await delay();
+    requiereSesion();
+    if (!actividadDe(input.id_actividad)) err(422, "Datos inválidos.", { id_actividad: "Actividad inexistente." });
+    if (!enAmbito(input.id_actividad)) err(403, "Fuera de su ámbito de institución.");
+    const nuevo: SostenibilidadFinanciera = {
+      id_registro: nextId(sostenibilidad, "id_registro"),
+      id_actividad: input.id_actividad,
+      mes_periodo: input.mes_periodo,
+      ingresos_brutos: input.ingresos_brutos ?? 0,
+      costos_directos: input.costos_directos ?? 0,
+      costos_indirectos: input.costos_indirectos ?? 0,
+      recursos_efectivo: input.recursos_efectivo ?? 0,
+      recursos_especie: input.recursos_especie ?? 0,
+      fuente_datos: input.fuente_datos ?? null,
+      meta_anual: input.meta_anual ?? 0,
+      control_registro: "AGREGADO",
+    };
+    sostenibilidad.push(nuevo);
+    auditar("sostenibilidad_financiera", String(nuevo.id_registro), "alta", null, { control_registro: "AGREGADO" });
+    return conIndicadoresFinancieros(nuevo);
   },
 };
 

@@ -56,9 +56,9 @@ cp env.example .env             # rellenar secretos
 php spark serve                 # http://localhost:8080  → GET /api/v1/health
 ```
 
-## Estado (Fase 2 — metas, productos y tableros, en progreso)
+## Estado (Fase 3 — incidencia y verticales, en progreso)
 
-Fase 0, **Fase 1 completa** (Sprints 1–4) y el **Sprint 5** de Fase 2 están implementados y verificados (CI verde).
+Fase 0, **Fases 1–2 completas** (Sprints 1–5) y el **Sprint 6** de Fase 3 están implementados y verificados (CI verde).
 
 | Pista | Entregable | Estado |
 |---|---|---|
@@ -72,6 +72,7 @@ Fase 0, **Fase 1 completa** (Sprints 1–4) y el **Sprint 5** de Fase 2 están i
 | A (cadena MEL) · Sprint 3 | Procesos→eventos→ejecuciones→participaciones, máquina de estados, **deduplicación** (ADR-003) | ✅ cableado en `api.real.ts` |
 | A (migración) · Sprint 4 | `spark mel:import` (limpia `#REF!`, descarta plantillas, regenera personas, **concilia**) | ✅ mecanismo verificado vs fixture |
 | A (metas/tableros) · Sprint 5 | Metas POA + seguimiento (semáforo 90/75, casos C/D), productos tipo E, tableros sobre `control=OK` | ✅ cableado en `api.real.ts` |
+| A+B (incidencia/verticales) · Sprint 6 | Incidencia (RN-004) + shelter/sostenibilidad (indicadores calculados); **contrato ampliado** (api.ts/mock/real) | ✅ cableado en `api.real.ts` |
 
 > **Carga real (fuera de este entorno):** colocar los CSV del Excel v1.9 en `apps/api/data/excel/`
 > (PII, no se versionan) y correr `php spark mel:import` contra **MySQL real** (`docker compose up`);
@@ -79,6 +80,6 @@ Fase 0, **Fase 1 completa** (Sprints 1–4) y el **Sprint 5** de Fase 2 están i
 > valida en SQLite con un fixture representativo. Pendiente también la **sesión de validación de UX**
 > con Coordinación MEL (doc 09 §8).
 >
-> **Siguiente:** Fase 3 — incidencia y verticales (Sprint 6, amplía el contrato).
+> **Siguiente:** Fase 4 — resultados (tipo R), reportería FECHAC y endurecimiento (Sprint 7).
 
 El plan por fases completo está descrito en [`Sistema MEL/07-roadmap`](Sistema%20MEL/07-roadmap/07_roadmap_sprints.md).

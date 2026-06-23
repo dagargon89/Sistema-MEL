@@ -43,13 +43,26 @@
  *   listarAuditoria       GET    /api/v1/auditoria
  *   nombreEvidencia       GET    /api/v1/evidencias/nombre
  *   tablero               GET    /api/v1/tableros/{tipo}
+ *   --- Incidencia (§8, Fase 3) ---
+ *   listarPropuestasIncidencia / crearPropuestaIncidencia   GET·POST /api/v1/incidencia/propuestas
+ *   listarProcesosIncidencia   / crearProcesoIncidencia      GET·POST /api/v1/incidencia/procesos
+ *   listarCompromisos          / crearCompromiso             GET·POST /api/v1/incidencia/compromisos
+ *   listarAlianzas             / crearAlianza                GET·POST /api/v1/incidencia/alianzas
+ *   listarHitos                / crearHito                   GET·POST /api/v1/incidencia/hitos
+ *   --- Verticales (§9, Fase 3) ---
+ *   listarOcupacionShelter     / crearOcupacionShelter       GET·POST /api/v1/shelter/ocupacion
+ *   listarSostenibilidad       / crearSostenibilidad         GET·POST /api/v1/sostenibilidad
  * ===================================================================== */
 import type {
   Actividad,
   ActividadConHerencia,
+  Alianza,
+  AlianzaInput,
   Auditoria,
   CasoExcepcional,
   Componente,
+  Compromiso,
+  CompromisoInput,
   DuplicadoEnCola,
   Eje,
   Ejecucion,
@@ -59,12 +72,16 @@ import type {
   EstatusEvento,
   EventoProgramado,
   EventoProgramadoInput,
+  HitoIncidencia,
+  HitoIncidenciaInput,
   Institucion,
   Linea,
   LoginInput,
   MesPOA,
   Meta,
   MetaInput,
+  OcupacionShelter,
+  OcupacionShelterInput,
   Paged,
   Participacion,
   ParticipacionAgregada,
@@ -74,9 +91,13 @@ import type {
   PerfilResp,
   Persona,
   Proceso,
+  ProcesoIncidencia,
+  ProcesoIncidenciaInput,
   ProcesoInput,
   ProductoEntregable,
   ProductoInput,
+  PropuestaIncidencia,
+  PropuestaIncidenciaInput,
   Resultado,
   ResolucionDuplicadoInput,
   SeguimientoMeta,
@@ -84,6 +105,8 @@ import type {
   Solicitud,
   SolicitudInput,
   SolicitudPatchInput,
+  SostenibilidadFinanciera,
+  SostenibilidadInput,
   TableroEjecutivo,
   TipoRegistro,
   TipoTablero,
@@ -173,6 +196,24 @@ export interface ApiClient {
 
   /* ---- Tableros (doc 05 §12) ---- */
   tablero(tipo: TipoTablero, p?: FiltrosComunes): Promise<TableroEjecutivo>;
+
+  /* ---- Incidencia (doc 05 §8, extensión Fase 3) ---- */
+  listarPropuestasIncidencia(p?: PageParams): Promise<Paged<PropuestaIncidencia>>;
+  crearPropuestaIncidencia(input: PropuestaIncidenciaInput): Promise<PropuestaIncidencia>;
+  listarProcesosIncidencia(p?: PageParams): Promise<Paged<ProcesoIncidencia>>;
+  crearProcesoIncidencia(input: ProcesoIncidenciaInput): Promise<ProcesoIncidencia>;
+  listarCompromisos(p?: PageParams): Promise<Paged<Compromiso>>;
+  crearCompromiso(input: CompromisoInput): Promise<Compromiso>;
+  listarAlianzas(p?: PageParams): Promise<Paged<Alianza>>;
+  crearAlianza(input: AlianzaInput): Promise<Alianza>;
+  listarHitos(p?: PageParams): Promise<Paged<HitoIncidencia>>;
+  crearHito(input: HitoIncidenciaInput): Promise<HitoIncidencia>;
+
+  /* ---- Verticales (doc 05 §9, extensión Fase 3) ---- */
+  listarOcupacionShelter(p?: PageParams): Promise<Paged<OcupacionShelter>>;
+  crearOcupacionShelter(input: OcupacionShelterInput): Promise<OcupacionShelter>;
+  listarSostenibilidad(p?: PageParams): Promise<Paged<SostenibilidadFinanciera>>;
+  crearSostenibilidad(input: SostenibilidadInput): Promise<SostenibilidadFinanciera>;
 }
 
 /** Alias del input de login para no acoplar el orden de imports. */
