@@ -1,0 +1,14 @@
+parameters:
+    level: 8
+    paths:
+        - app
+    excludePaths:
+        # Boilerplate del appstarter (toolbar de desarrollo): llamadas nullable que no son código nuestro.
+        - app/Views/*
+        - app/Config/Events.php
+    scanDirectories:
+        - vendor/codeigniter4/framework/system
+    # ENVIRONMENT se resuelve en runtime; evita falsos "always true/false" en los Config.
+    dynamicConstantNames:
+        - ENVIRONMENT
+    treatPhpDocTypesAsCertain: false
