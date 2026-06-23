@@ -56,14 +56,19 @@ cp env.example .env             # rellenar secretos
 php spark serve                 # http://localhost:8080  → GET /api/v1/health
 ```
 
-## Estado (Fase 0 — en progreso)
+## Estado (Fase 0 — implementación completa)
 
 | Pista | Entregable | Estado |
 |---|---|---|
 | B (SPA) | Scaffold + biblioteca de componentes + 19 pantallas contra el mock | ✅ navegable y verificado |
 | A (infra) | Monorepo, `docker-compose`, CI | ✅ |
 | A (API) | Scaffold CI4 + ruta `/api/v1/health` | ✅ responde 200 |
-| A (datos) | Migraciones base del esquema (doc 03) | ⏳ siguiente |
-| A (auth) | Shield + RBAC + segmentación (Sprint 1) | ⏳ Fase 1 |
+| A (datos) | Migraciones base (doc 03: dimensiones + gobernanza, FK RESTRICT) + `InitialSeeder` | ✅ verificado en SQLite (PHPUnit) |
+| A (calidad) | Gates en CI: PHPUnit + PHPStan nivel 8 (api), Vitest (web) | ✅ |
+| A (auth) | Shield + RBAC + segmentación | ⏳ Fase 1 · Sprint 1 |
+
+> **Pendiente de Fase 0 fuera de este entorno:** ejecutar `php spark migrate` contra **MySQL real**
+> vía `docker compose up` (aquí no hay Docker; las migraciones se validan en SQLite en memoria) y la
+> **sesión de validación de UX** con Coordinación MEL (doc 09 §8).
 
 El plan por fases completo está descrito en [`Sistema MEL/07-roadmap`](Sistema%20MEL/07-roadmap/07_roadmap_sprints.md).
