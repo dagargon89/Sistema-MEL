@@ -12,6 +12,9 @@ use CodeIgniter\Filters\InvalidChars;
 use CodeIgniter\Filters\PageCache;
 use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
+use App\Filters\Rbac;
+use App\Filters\ScopeInstitucion;
+use App\Filters\Throttle;
 
 class Filters extends BaseFilters
 {
@@ -34,6 +37,10 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
+        // Filtros de Sistema MEL (Shield aporta `tokens`/`group`/`permission` vía su Registrar).
+        'scope-institucion' => ScopeInstitucion::class,
+        'rbac'              => Rbac::class,
+        'throttle'          => Throttle::class,
     ];
 
     /**
@@ -72,13 +79,14 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
+            'cors', // CORS para la SPA (incluye preflight OPTIONS) — doc 04
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
         ],
         'after' => [
+            'secureheaders', // cabeceras de seguridad en toda respuesta (doc 04 §6.3)
             // 'honeypot',
-            // 'secureheaders',
         ],
     ];
 

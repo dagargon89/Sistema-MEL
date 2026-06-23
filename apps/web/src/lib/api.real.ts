@@ -15,7 +15,7 @@
  * ===================================================================== */
 import axios, { AxiosError, type AxiosInstance } from "axios";
 import type { ApiClient } from "./api";
-import { ApiError, type ErrorPayload } from "./types";
+import { ApiError, type ErrorPayload, type PerfilResp, type SesionResp } from "./types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
@@ -52,9 +52,18 @@ const noImpl = (m: string) => (): never => {
 };
 
 export const apiReal: ApiClient = {
-  login: noImpl("login"),
-  logout: noImpl("logout"),
-  me: noImpl("me"),
+  /* ---- Auth (Sprint 1): desempaqueta el envelope { success, data } del doc 05 ---- */
+  login: async (input) => {
+    const { data } = await http.post<{ data: SesionResp }>("/auth/login", input);
+    return data.data;
+  },
+  logout: async () => {
+    await http.post("/auth/logout");
+  },
+  me: async () => {
+    const { data } = await http.get<{ data: PerfilResp }>("/auth/me");
+    return data.data;
+  },
   listarActividades: noImpl("listarActividades"),
   crearActividad: noImpl("crearActividad"),
   reclasificarActividad: noImpl("reclasificarActividad"),

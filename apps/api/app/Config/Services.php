@@ -2,6 +2,7 @@
 
 namespace Config;
 
+use App\Services\CurrentScope;
 use CodeIgniter\Config\BaseService;
 
 /**
@@ -19,14 +20,17 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
-    /*
-     * public static function example($getShared = true)
-     * {
-     *     if ($getShared) {
-     *         return static::getSharedInstance('example');
-     *     }
-     *
-     *     return new \CodeIgniter\Example();
-     * }
+    /**
+     * Ámbito de la petición autenticada (institución/rol), cargado por el filtro
+     * `scope-institucion` y consumido por controladores y Repositories (ADR-004).
      */
+    public static function currentScope(bool $getShared = true): CurrentScope
+    {
+        if ($getShared) {
+            /** @var CurrentScope */
+            return static::getSharedInstance('currentScope');
+        }
+
+        return new CurrentScope();
+    }
 }
