@@ -146,10 +146,10 @@ export interface ApiClient {
   validarEjecucion(id: number, input: ValidacionInput): Promise<Ejecucion>;
 
   /* ---- Participación y dedup (doc 05 §4–§5) ---- */
-  listarParticipaciones(idEjecucion: number, p?: PageParams): Promise<Paged<Participacion>>;
+  listarParticipaciones(idEjecucion: number, p?: PageParams & { q?: string }): Promise<Paged<Participacion>>;
   crearParticipacion(input: ParticipacionInput): Promise<ParticipacionCreada>;
   crearAgregada(input: ParticipacionAgregadaInput): Promise<ParticipacionAgregada>;
-  listarPersonas(p?: PageParams & { control?: Persona["control_registro"] }): Promise<Paged<Persona>>;
+  listarPersonas(p?: PageParams & { control?: Persona["control_registro"]; q?: string }): Promise<Paged<Persona>>;
   colaDuplicados(p?: PageParams): Promise<Paged<DuplicadoEnCola>>;
   resolverDuplicado(idParticipacion: number, input: ResolucionDuplicadoInput): Promise<Participacion>;
 

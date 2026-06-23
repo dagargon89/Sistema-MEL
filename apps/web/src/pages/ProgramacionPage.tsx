@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { CalendarPlus } from "lucide-react";
 import { api } from "@/lib";
 import type { EventoProgramado, EventoProgramadoInput, TipoProgramacion } from "@/lib";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
 import { TextField } from "@/components/ui/TextField";
+import { Pagination, metaToPagination } from "@/components/ui/Pagination";
 import { toast } from "@/store/toast";
 import { errMsg } from "@/utils/errors";
 
@@ -18,8 +19,13 @@ export function ProgramacionPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({ id_actividad: "", tipo_programacion: "SESION_UNICA" as TipoProgramacion, fecha_inicio: "", fecha_finalizacion: "" });
+  const [page, setPage] = useState(1);
 
-  const eventos = useQuery({ queryKey: ["eventos"], queryFn: () => api.listarEventos({ limit: 50 }) });
+  const eventos = useQuery({
+    queryKey: ["eventos", page],
+    queryFn: () => api.listarEventos({ page }),
+    placeholderData: keepPreviousData,
+  });
   const acts = useQuery({ queryKey: ["actividades", "all"], queryFn: () => api.listarActividades({ limit: 100 }) });
 
   const crear = useMutation({
@@ -76,6 +82,7 @@ export function ProgramacionPage() {
         onRetry={() => eventos.refetch()}
         emptyMessage="Sin eventos programados en tu ámbito."
       />
+      <Pagination {...metaToPagination(eventos.data?.meta)} onPage={setPage} disabled={eventos.isFetching} />
 
       <Modal
         open={open}

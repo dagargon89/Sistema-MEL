@@ -473,10 +473,19 @@ export const apiMock: ApiClient = {
   },
 
   /* ====== Participación y dedup ====== */
-  async listarParticipaciones(idEjecucion: number, p?: PageParams): Promise<Paged<Participacion>> {
+  async listarParticipaciones(idEjecucion: number, p?: PageParams & { q?: string }): Promise<Paged<Participacion>> {
     await delay();
     requiereSesion();
-    const rows = participaciones.filter((x) => x.id_ejecucion === idEjecucion);
+    let rows = participaciones.filter((x) => x.id_ejecucion === idEjecucion);
+    if (p?.q?.trim()) {
+      const q = p.q.trim();
+      rows = rows.filter(
+        (x) =>
+          coincide(`${x.nombres} ${x.apellido_paterno} ${x.apellido_materno ?? ""}`, q) ||
+          coincide(x.telefono, q) ||
+          coincide(x.id_persona, q),
+      );
+    }
     return paginar(rows, p?.page, p?.limit);
   },
 
@@ -611,7 +620,17 @@ export const apiMock: ApiClient = {
   async listarPersonas(p): Promise<Paged<Persona>> {
     await delay();
     requiereRol("coordinacion", "administrador"); // RF-PART (GET /personas solo coordinación)
-    const rows = personas.filter((x) => (p?.control ? x.control_registro === p.control : true));
+    let rows = personas.filter((x) => (p?.control ? x.control_registro === p.control : true));
+    if (p?.q?.trim()) {
+      const q = p.q.trim();
+      rows = rows.filter(
+        (x) =>
+          coincide(x.nombre_completo, q) ||
+          coincide(x.telefono, q) ||
+          coincide(x.correo, q) ||
+          coincide(x.id_persona, q),
+      );
+    }
     return paginar(rows, p?.page, p?.limit);
   },
 

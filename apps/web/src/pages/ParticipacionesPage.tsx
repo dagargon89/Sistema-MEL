@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { ArrowLeft, UserPlus, Search } from "lucide-react";
 import { api } from "@/lib";
 import type { Participacion, ParticipacionInput, Sexo } from "@/lib";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { TextField } from "@/components/ui/TextField";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { Pagination, metaToPagination } from "@/components/ui/Pagination";
 import { toast } from "@/store/toast";
 import { errMsg } from "@/utils/errors";
 
@@ -29,10 +30,13 @@ export function ParticipacionesPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [form, setForm] = useState({ ...vacio });
+  const [busca, setBusca] = useState("");
+  const [page, setPage] = useState(1);
 
   const q = useQuery({
-    queryKey: ["participaciones", idEjecucion],
-    queryFn: () => api.listarParticipaciones(idEjecucion),
+    queryKey: ["participaciones", idEjecucion, busca, page],
+    queryFn: () => api.listarParticipaciones(idEjecucion, { q: busca.trim() || undefined, page }),
+    placeholderData: keepPreviousData,
   });
 
   const crear = useMutation({
@@ -126,6 +130,17 @@ export function ParticipacionesPage() {
         </form>
 
         <div className="lg:col-span-3">
+          <div className="relative mb-3">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted" aria-hidden="true" />
+            <input
+              type="search"
+              aria-label="Buscar participante"
+              placeholder="Buscar por nombre, teléfono o persona…"
+              value={busca}
+              onChange={(e) => { setBusca(e.target.value); setPage(1); }}
+              className="w-full rounded-md border border-border bg-bg py-2 pl-8 pr-3 text-sm text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-soft"
+            />
+          </div>
           <DataTable
             columns={columns}
             rows={q.data?.data ?? []}
@@ -135,6 +150,7 @@ export function ParticipacionesPage() {
             onRetry={() => q.refetch()}
             emptyMessage="Sin participaciones. Registra la primera en el formulario."
           />
+          <Pagination {...metaToPagination(q.data?.meta)} onPage={setPage} disabled={q.isFetching} />
         </div>
       </div>
     </div>

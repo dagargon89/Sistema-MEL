@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { api } from "@/lib";
 import type { Solicitud, SolicitudInput, TipoSolicitud, NivelCriticidad, EstadoSolicitud } from "@/lib";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
+import { Pagination, metaToPagination } from "@/components/ui/Pagination";
 import { toast } from "@/store/toast";
 import { errMsg } from "@/utils/errors";
 
@@ -23,8 +24,14 @@ export function SolicitudesPage() {
   const [resol, setResol] = useState<Solicitud | null>(null);
   const [nuevoEstado, setNuevoEstado] = useState<EstadoSolicitud>("en_proceso");
   const [f, setF] = useState({ descripcion: "", tipo_solicitud: "correccion" as TipoSolicitud, nivel_criticidad: "MEDIA" as NivelCriticidad, entidad_afectada: "" });
+  const [estado, setEstado] = useState<string>("");
+  const [page, setPage] = useState(1);
 
-  const q = useQuery({ queryKey: ["solicitudes"], queryFn: () => api.listarSolicitudes({ limit: 50 }) });
+  const q = useQuery({
+    queryKey: ["solicitudes", estado, page],
+    queryFn: () => api.listarSolicitudes({ estado: (estado || undefined) as EstadoSolicitud | undefined, page }),
+    placeholderData: keepPreviousData,
+  });
 
   const crear = useMutation({
     mutationFn: () => {
@@ -79,9 +86,17 @@ export function SolicitudesPage() {
         title="Solicitudes"
         subtitle="Cualquier usuario pide correcciones; coordinación las resuelve. Todo queda en auditoría."
         actions={
-          <Button icon={<Plus className="size-4" />} onClick={() => setCrearOpen(true)}>
-            Nueva solicitud
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select label="" aria-label="Filtrar por estado" value={estado} onChange={(e) => { setEstado(e.target.value); setPage(1); }} className="w-44">
+              <option value="">Todos los estados</option>
+              {ESTADOS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </Select>
+            <Button icon={<Plus className="size-4" />} onClick={() => setCrearOpen(true)}>
+              Nueva solicitud
+            </Button>
+          </div>
         }
       />
       <DataTable
@@ -93,6 +108,7 @@ export function SolicitudesPage() {
         onRetry={() => q.refetch()}
         emptyMessage="No hay solicitudes registradas."
       />
+      <Pagination {...metaToPagination(q.data?.meta)} onPage={setPage} disabled={q.isFetching} />
 
       <Modal
         open={crearOpen}

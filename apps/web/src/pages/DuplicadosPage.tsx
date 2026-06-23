@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { api } from "@/lib";
 import type { DuplicadoEnCola, ResolucionDuplicadoInput } from "@/lib";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
+import { Pagination, metaToPagination } from "@/components/ui/Pagination";
 import { toast } from "@/store/toast";
 import { errMsg } from "@/utils/errors";
 
@@ -16,8 +17,13 @@ export function DuplicadosPage() {
   const [sel, setSel] = useState<DuplicadoEnCola | null>(null);
   const [accion, setAccion] = useState<ResolucionDuplicadoInput["accion"]>("fusionar");
   const [motivo, setMotivo] = useState("");
+  const [page, setPage] = useState(1);
 
-  const q = useQuery({ queryKey: ["duplicados"], queryFn: () => api.colaDuplicados() });
+  const q = useQuery({
+    queryKey: ["duplicados", page],
+    queryFn: () => api.colaDuplicados({ page }),
+    placeholderData: keepPreviousData,
+  });
 
   const resolver = useMutation({
     mutationFn: () =>
@@ -74,6 +80,7 @@ export function DuplicadosPage() {
         emptyTitle="Cola vacía"
         emptyMessage="No hay duplicados sospechosos por revisar."
       />
+      <Pagination {...metaToPagination(q.data?.meta)} onPage={setPage} disabled={q.isFetching} />
 
       <Modal
         open={!!sel}

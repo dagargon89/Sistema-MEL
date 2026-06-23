@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { api } from "@/lib";
 import type { ActividadConHerencia, TipoRegistro } from "@/lib";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { Select } from "@/components/ui/Select";
+import { Pagination, metaToPagination } from "@/components/ui/Pagination";
 import { cn } from "@/components/ui/cn";
 import { errMsg } from "@/utils/errors";
 
@@ -16,9 +17,11 @@ const tipoStyle: Record<TipoRegistro, string> = {
 
 export function CatalogosPage() {
   const [tipo, setTipo] = useState<string>("");
+  const [page, setPage] = useState(1);
   const q = useQuery({
-    queryKey: ["catalogos", "actividades", tipo],
-    queryFn: () => api.listarActividades({ tipo: (tipo || undefined) as TipoRegistro | undefined, limit: 100 }),
+    queryKey: ["catalogos", "actividades", tipo, page],
+    queryFn: () => api.listarActividades({ tipo: (tipo || undefined) as TipoRegistro | undefined, page }),
+    placeholderData: keepPreviousData,
   });
 
   const columns: Column<ActividadConHerencia>[] = [
@@ -44,7 +47,7 @@ export function CatalogosPage() {
         title="Catálogos · Actividades"
         subtitle="La verdad estratégica vive aquí y se hereda (eje→línea→componente→institución). Escritura: coordinación/admin."
         actions={
-          <Select label="" aria-label="Filtrar por tipo" value={tipo} onChange={(e) => setTipo(e.target.value)} className="w-44">
+          <Select label="" aria-label="Filtrar por tipo" value={tipo} onChange={(e) => { setTipo(e.target.value); setPage(1); }} className="w-44">
             <option value="">Todos los tipos</option>
             <option value="P">P · Participación</option>
             <option value="E">E · Entregable</option>
@@ -61,6 +64,7 @@ export function CatalogosPage() {
         onRetry={() => q.refetch()}
         emptyMessage="No hay actividades para este filtro en tu ámbito."
       />
+      <Pagination {...metaToPagination(q.data?.meta)} onPage={setPage} disabled={q.isFetching} />
     </div>
   );
 }

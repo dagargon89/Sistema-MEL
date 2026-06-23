@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { api } from "@/lib";
 import type { Ejecucion, ControlRegistro } from "@/lib";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Select } from "@/components/ui/Select";
+import { Pagination, metaToPagination } from "@/components/ui/Pagination";
 import { errMsg } from "@/utils/errors";
 
 const CONTROLES: ControlRegistro[] = ["CAPTURADO", "INCOMPLETO", "REVISAR", "OK", "AGREGADO"];
@@ -14,10 +15,12 @@ const CONTROLES: ControlRegistro[] = ["CAPTURADO", "INCOMPLETO", "REVISAR", "OK"
 export function EjecucionesPage() {
   const navigate = useNavigate();
   const [control, setControl] = useState<string>("");
+  const [page, setPage] = useState(1);
 
   const q = useQuery({
-    queryKey: ["ejecuciones", control],
-    queryFn: () => api.listarEjecuciones({ control: (control || undefined) as ControlRegistro | undefined }),
+    queryKey: ["ejecuciones", control, page],
+    queryFn: () => api.listarEjecuciones({ control: (control || undefined) as ControlRegistro | undefined, page }),
+    placeholderData: keepPreviousData,
   });
 
   const columns: Column<Ejecucion>[] = [
@@ -39,7 +42,7 @@ export function EjecucionesPage() {
             label=""
             aria-label="Filtrar por control"
             value={control}
-            onChange={(e) => setControl(e.target.value)}
+            onChange={(e) => { setControl(e.target.value); setPage(1); }}
             className="w-44"
           >
             <option value="">Todos los estados</option>
@@ -61,6 +64,7 @@ export function EjecucionesPage() {
         emptyMessage="No hay ejecuciones en este filtro. Programa un evento y regístralo."
         onRowClick={(r) => navigate(`/ejecuciones/${r.id_ejecucion}`)}
       />
+      <Pagination {...metaToPagination(q.data?.meta)} onPage={setPage} disabled={q.isFetching} />
     </div>
   );
 }
