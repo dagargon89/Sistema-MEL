@@ -1,0 +1,37 @@
+# Sistema MEL — stack local de desarrollo (doc 07 · Sprint 0).
+# MySQL 8 (única fuente de verdad) + Redis (caché/cola/throttle).
+#   docker compose up -d
+services:
+  db:
+    image: mysql:8.0
+    container_name: mel-db
+    environment:
+      MYSQL_DATABASE: sistema_mel
+      MYSQL_USER: mel
+      MYSQL_PASSWORD: mel_secret
+      MYSQL_ROOT_PASSWORD: root_secret
+    # Colación acento-insensible del doc 03 (clave para la deduplicación).
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mel_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_secret"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: mel-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - mel_redis_data:/data
+
+volumes:
+  mel_db_data:
+  mel_redis_data:
