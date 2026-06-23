@@ -21,7 +21,16 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api'], static function
         $routes->post('auth/logout', 'AuthController::logout');
         $routes->get('auth/me', 'AuthController::me');
 
-        // Catálogos (lectura para cualquier rol autenticado, acotada al ámbito).
+        // --- Catálogos (Sprint 2) ---
+        // Lectura: cualquier rol autenticado, acotada al ámbito.
         $routes->get('catalogos/actividades', 'ActividadController::index', ['filter' => 'throttle:read']);
+        $routes->get('catalogos/ejes', 'CatalogoController::ejes', ['filter' => 'throttle:read']);
+        $routes->get('catalogos/lineas', 'CatalogoController::lineas', ['filter' => 'throttle:read']);
+        $routes->get('catalogos/componentes', 'CatalogoController::componentes', ['filter' => 'throttle:read']);
+        $routes->get('catalogos/instituciones', 'CatalogoController::instituciones', ['filter' => 'throttle:read']);
+
+        // Escritura de actividades: coordinación/admin; reclasificar P/E/R solo coordinación (auditado).
+        $routes->post('catalogos/actividades', 'ActividadController::create', ['filter' => ['rbac:coordinacion,administrador', 'throttle:write']]);
+        $routes->patch('catalogos/actividades/(:segment)/tipo-registro', 'ActividadController::reclasificar/$1', ['filter' => ['rbac:coordinacion', 'throttle:write']]);
     });
 });

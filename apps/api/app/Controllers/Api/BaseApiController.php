@@ -40,4 +40,31 @@ abstract class BaseApiController extends ResourceController
 
         return $this->response->setStatusCode($status)->setJSON($body);
     }
+
+    /**
+     * Lee un campo string de un arreglo de datos validados (null si ausente/vacío).
+     *
+     * @param array<string, mixed> $src
+     */
+    protected function campoStr(array $src, string $key): ?string
+    {
+        $v = $src[$key] ?? null;
+        if (is_string($v)) {
+            return $v === '' ? null : $v;
+        }
+
+        return is_int($v) || is_float($v) ? (string) $v : null;
+    }
+
+    /**
+     * Lee un campo entero de un arreglo de datos validados (null si no numérico).
+     *
+     * @param array<string, mixed> $src
+     */
+    protected function campoInt(array $src, string $key): ?int
+    {
+        $v = $src[$key] ?? null;
+
+        return is_numeric($v) ? (int) $v : null;
+    }
 }

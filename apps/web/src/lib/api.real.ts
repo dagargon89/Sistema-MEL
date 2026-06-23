@@ -15,7 +15,19 @@
  * ===================================================================== */
 import axios, { AxiosError, type AxiosInstance } from "axios";
 import type { ApiClient } from "./api";
-import { ApiError, type ErrorPayload, type PerfilResp, type SesionResp } from "./types";
+import {
+  ApiError,
+  type Actividad,
+  type ActividadConHerencia,
+  type Componente,
+  type Eje,
+  type ErrorPayload,
+  type Institucion,
+  type Linea,
+  type PageMeta,
+  type PerfilResp,
+  type SesionResp,
+} from "./types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
@@ -44,6 +56,17 @@ http.interceptors.response.use(
   },
 );
 
+/** El backend emite el pager de CI4 (doc 05 §1.6); el contrato congelado usa `meta`. */
+interface BackendPager {
+  currentPage: number;
+  pageCount: number;
+  total: number;
+  perPage: number;
+}
+function toMeta(p: BackendPager): PageMeta {
+  return { page: p.currentPage, per_page: p.perPage, total: p.total, total_pages: p.pageCount };
+}
+
 /** PENDIENTE Fase 2: implementar cada método contra los endpoints del doc 05.
  *  Se exporta el mismo tipo ApiClient para que el interruptor en index.ts compile;
  *  invocarlo antes de implementarlo lanza un error explícito en vez de fallar silencioso. */
@@ -64,13 +87,32 @@ export const apiReal: ApiClient = {
     const { data } = await http.get<{ data: PerfilResp }>("/auth/me");
     return data.data;
   },
-  listarActividades: noImpl("listarActividades"),
-  crearActividad: noImpl("crearActividad"),
-  reclasificarActividad: noImpl("reclasificarActividad"),
-  listarEjes: noImpl("listarEjes"),
-  listarLineas: noImpl("listarLineas"),
-  listarComponentes: noImpl("listarComponentes"),
-  listarInstituciones: noImpl("listarInstituciones"),
+  /* ---- Catálogos (Sprint 2) ---- */
+  listarActividades: async (p) => {
+    const { data } = await http.get<{ data: ActividadConHerencia[]; pager: BackendPager }>(
+      "/catalogos/actividades",
+      { params: p },
+    );
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearActividad: async (input) => {
+    const { data } = await http.post<{ data: Actividad }>("/catalogos/actividades", input);
+    return data.data;
+  },
+  reclasificarActividad: async (id, input) => {
+    const { data } = await http.patch<{ data: Actividad }>(
+      `/catalogos/actividades/${id}/tipo-registro`,
+      input,
+    );
+    return data.data;
+  },
+  listarEjes: async () => (await http.get<{ data: Eje[] }>("/catalogos/ejes")).data.data,
+  listarLineas: async (p) =>
+    (await http.get<{ data: Linea[] }>("/catalogos/lineas", { params: p })).data.data,
+  listarComponentes: async (p) =>
+    (await http.get<{ data: Componente[] }>("/catalogos/componentes", { params: p })).data.data,
+  listarInstituciones: async () =>
+    (await http.get<{ data: Institucion[] }>("/catalogos/instituciones")).data.data,
   listarProcesos: noImpl("listarProcesos"),
   crearProceso: noImpl("crearProceso"),
   listarEventos: noImpl("listarEventos"),

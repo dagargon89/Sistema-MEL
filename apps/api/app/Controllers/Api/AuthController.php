@@ -21,9 +21,11 @@ class AuthController extends BaseApiController
             return $this->err(422, 'Datos inválidos.', $this->validator?->getErrors() ?? []);
         }
 
-        $email    = $this->request->getPost('email');
-        $password = $this->request->getPost('password');
-        if (! is_string($email) || ! is_string($password)) {
+        // getValidated() lee del request vía withRequest (soporta cuerpo JSON de la SPA y formularios).
+        $d        = $this->validator?->getValidated() ?? [];
+        $email    = $this->campoStr($d, 'email');
+        $password = $this->campoStr($d, 'password');
+        if ($email === null || $password === null) {
             return $this->err(422, 'Datos inválidos.');
         }
 
