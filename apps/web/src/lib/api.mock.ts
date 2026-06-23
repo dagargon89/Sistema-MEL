@@ -105,11 +105,18 @@ function requiereSesion(): { user_id: number; rol: Rol["clave"]; ambito: string[
 
 function requiereRol(...permitidos: Rol["clave"][]): void {
   const s = requiereSesion();
+  // El administrador funciona como superadmin: pasa cualquier control de rol.
+  if (s.rol === "administrador") return;
   if (!permitidos.includes(s.rol)) err(403, "No tiene permiso para esta acción.");
 }
 
-const ambitoDe = (userId: number): string[] =>
-  usuarioInstitucion.filter((ui) => ui.id_usuario === userId).map((ui) => ui.id_institucion);
+/** Ámbito de un usuario. El administrador (superadmin) ve TODAS las instituciones. */
+const ambitoDe = (userId: number): string[] => {
+  const u = usuarios.find((x) => x.id_usuario === userId);
+  const rol = u ? roles.find((r) => r.id_rol === u.id_rol) : undefined;
+  if (rol?.clave === "administrador") return instituciones.map((i) => i.id_institucion);
+  return usuarioInstitucion.filter((ui) => ui.id_usuario === userId).map((ui) => ui.id_institucion);
+};
 
 const actividadDe = (id: string): Actividad | undefined =>
   actividades.find((a) => a.id_actividad === id);

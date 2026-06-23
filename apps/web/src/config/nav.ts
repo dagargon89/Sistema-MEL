@@ -71,6 +71,8 @@ export const NAV: NavGroup[] = [
 ];
 
 export function navParaRol(rol: RolClave): NavGroup[] {
+  // El administrador funciona como superadmin: ve todas las secciones.
+  if (rol === "administrador") return NAV;
   return NAV.map((g) => ({ ...g, items: g.items.filter((i) => i.roles.includes(rol)) })).filter(
     (g) => g.items.length > 0,
   );

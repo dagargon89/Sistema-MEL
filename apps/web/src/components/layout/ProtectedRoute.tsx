@@ -8,7 +8,10 @@ export function ProtectedRoute({ children, roles }: { children: ReactNode; roles
   const location = useLocation();
 
   if (!user) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
-  if (roles && !roles.includes(user.rol)) return <Navigate to="/acceso-denegado" replace />;
+  // El administrador funciona como superadmin: acceso total, sin importar los
+  // guards de rol por pantalla.
+  if (user.rol !== "administrador" && roles && !roles.includes(user.rol))
+    return <Navigate to="/acceso-denegado" replace />;
 
   return <>{children}</>;
 }
