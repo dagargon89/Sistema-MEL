@@ -52,6 +52,8 @@
  *   --- Verticales (§9, Fase 3) ---
  *   listarOcupacionShelter     / crearOcupacionShelter       GET·POST /api/v1/shelter/ocupacion
  *   listarSostenibilidad       / crearSostenibilidad         GET·POST /api/v1/sostenibilidad
+ *   --- Reportería (§12, Fase 4) ---
+ *   exportarFechac             GET    /api/v1/export/fechac
  * ===================================================================== */
 import type {
   Actividad,
@@ -98,6 +100,7 @@ import type {
   ProductoInput,
   PropuestaIncidencia,
   PropuestaIncidenciaInput,
+  ReporteFechac,
   Resultado,
   ResolucionDuplicadoInput,
   SeguimientoMeta,
@@ -214,6 +217,9 @@ export interface ApiClient {
   crearOcupacionShelter(input: OcupacionShelterInput): Promise<OcupacionShelter>;
   listarSostenibilidad(p?: PageParams): Promise<Paged<SostenibilidadFinanciera>>;
   crearSostenibilidad(input: SostenibilidadInput): Promise<SostenibilidadFinanciera>;
+
+  /* ---- Exportación FECHAC (doc 05 §12, extensión Fase 4) ---- */
+  exportarFechac(p?: FiltrosComunes): Promise<ReporteFechac>;
 }
 
 /** Alias del input de login para no acoplar el orden de imports. */

@@ -707,6 +707,21 @@ export interface TableroEjecutivo {
   cumplimiento_ejecucion: number;
 }
 
+/** Reporte agregado para FECHAC (doc 05 §12, extensión Fase 4). Sobre control=OK. */
+export interface ReporteFechac {
+  generado: string;
+  periodo: string | null;
+  beneficiarios_unicos: number;
+  participaciones_nominales: number;
+  participaciones_agregadas: number;
+  cobertura_total: number;
+  eventos_programados: number;
+  ejecuciones: number;
+  cumplimiento_ejecucion: number;
+  actividades: { P: number; E: number; R: number; total: number };
+  resultados_reportados: number;
+}
+
 /* ---------------------------------------------------------------------
  * 9. Paginación y errores (doc 05 §1.4–§1.6)
  * ------------------------------------------------------------------- */

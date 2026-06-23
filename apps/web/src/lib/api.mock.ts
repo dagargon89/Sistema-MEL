@@ -26,6 +26,7 @@ import {
   type ProcesoIncidenciaInput,
   type PropuestaIncidencia,
   type PropuestaIncidenciaInput,
+  type ReporteFechac,
   type SostenibilidadFinanciera,
   type SostenibilidadInput,
   type Actividad,
@@ -1135,6 +1136,67 @@ export const apiMock: ApiClient = {
     sostenibilidad.push(nuevo);
     auditar("sostenibilidad_financiera", String(nuevo.id_registro), "alta", null, { control_registro: "AGREGADO" });
     return conIndicadoresFinancieros(nuevo);
+  },
+
+  /* ====== Exportación FECHAC (Fase 4) ====== */
+  async exportarFechac(p): Promise<ReporteFechac> {
+    await delay();
+    requiereRol("coordinacion", "direccion");
+    const s = requiereSesion();
+    const actEnAmbito = (idAct: string) => s.ambito.includes(institucionDeActividad(idAct) ?? "");
+    const eventoDe = (idEjec: number) => {
+      const ej = ejecuciones.find((x) => x.id_ejecucion === idEjec);
+      return ej ? eventos.find((e) => e.id_evento_programado === ej.id_evento_programado) : undefined;
+    };
+
+    const personasOk = new Set<string>();
+    let nominales = 0;
+    participaciones
+      .filter((par) => par.control_registro === "OK" && par.id_persona)
+      .filter((par) => {
+        const ev = eventoDe(par.id_ejecucion);
+        return ev ? actEnAmbito(ev.id_actividad) : false;
+      })
+      .forEach((par) => {
+        nominales += 1;
+        const per = personas.find((pp) => pp.id_persona === par.id_persona && pp.control_registro === "OK");
+        if (per) personasOk.add(per.id_persona);
+      });
+
+    const agregadasTotal = agregadas
+      .filter((a) => {
+        const ev = eventoDe(a.id_ejecucion);
+        return ev ? actEnAmbito(ev.id_actividad) : false;
+      })
+      .reduce((acc, a) => acc + a.cantidad_participantes, 0);
+
+    const eventosAmbito = eventos.filter((e) => actEnAmbito(e.id_actividad)).length;
+    const ejecCount = ejecuciones.filter((e) => {
+      const ev = eventoDe(e.id_ejecucion);
+      return ev && actEnAmbito(ev.id_actividad) && e.fecha_ejecucion_real != null;
+    }).length;
+
+    const porTipo = { P: 0, E: 0, R: 0, total: 0 };
+    actividades
+      .filter((a) => s.ambito.includes(a.id_institucion))
+      .forEach((a) => {
+        porTipo[a.tipo_registro] += 1;
+        porTipo.total += 1;
+      });
+
+    return {
+      generado: NOW.replace("T", " ").slice(0, 19),
+      periodo: p?.periodo ?? null,
+      beneficiarios_unicos: personasOk.size,
+      participaciones_nominales: nominales,
+      participaciones_agregadas: agregadasTotal,
+      cobertura_total: nominales + agregadasTotal,
+      eventos_programados: eventosAmbito,
+      ejecuciones: ejecCount,
+      cumplimiento_ejecucion: eventosAmbito === 0 ? 0 : Math.round((ejecCount / eventosAmbito) * 100) / 100,
+      actividades: porTipo,
+      resultados_reportados: resultados.filter((r) => actEnAmbito(r.id_actividad)).length,
+    };
   },
 };
 

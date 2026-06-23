@@ -29,4 +29,25 @@ class AuditoriaService
             'valor_despues' => $despues === null ? null : json_encode($despues),
         ]);
     }
+
+    /**
+     * Historial inmutable, opcionalmente filtrado por entidad (RF-GOB-112, doc 05 §11).
+     * Solo lo consultan coordinación/admin/dirección (RBAC en la ruta).
+     *
+     * @return array{rows: list<array<string, mixed>>, total: int}
+     */
+    public function listar(?string $entidad, int $page, int $limit): array
+    {
+        $builder = db_connect()->table('auditoria');
+        if ($entidad !== null) {
+            $builder->where('entidad', $entidad);
+        }
+        $total  = (int) $builder->countAllResults(false);
+        $result = $builder->orderBy('id_evento', 'DESC')->get($limit, ($page - 1) * $limit);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $result === false ? [] : $result->getResultArray();
+
+        return ['rows' => $rows, 'total' => $total];
+    }
 }

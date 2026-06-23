@@ -379,6 +379,89 @@ final class Shape
         return 'ROJO';
     }
 
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function resultado(array $r): array
+    {
+        return [
+            'id_resultado'    => self::iReq($r, 'id_resultado'),
+            'id_actividad'    => self::sReq($r, 'id_actividad'),
+            'indicador'       => self::sReq($r, 'indicador'),
+            'linea_base'      => self::f($r, 'linea_base'),
+            'valor_medido'    => self::f($r, 'valor_medido'),
+            'metodo_medicion' => self::s($r, 'metodo_medicion'),
+            'fecha_medicion'  => self::s($r, 'fecha_medicion'),
+            'evidencia_url'   => self::s($r, 'evidencia_url'),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function solicitud(array $r): array
+    {
+        return [
+            'id_solicitud'         => self::iReq($r, 'id_solicitud'),
+            'fecha_solicitud'      => self::sReq($r, 'fecha_solicitud'),
+            'id_solicitante'       => self::iReq($r, 'id_solicitante'),
+            'rol_solicitante'      => self::s($r, 'rol_solicitante'),
+            'entidad_afectada'     => self::s($r, 'entidad_afectada'),
+            'descripcion'          => self::sReq($r, 'descripcion'),
+            'tipo_solicitud'       => self::sReq($r, 'tipo_solicitud'),
+            'nivel_criticidad'     => self::sReq($r, 'nivel_criticidad'),
+            'impacto'              => self::s($r, 'impacto'),
+            'estado'               => self::sReq($r, 'estado'),
+            'responsable_atencion' => self::i($r, 'responsable_atencion'),
+            'fecha_resolucion'     => self::s($r, 'fecha_resolucion'),
+            'comentarios'          => self::s($r, 'comentarios'),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function auditoria(array $r): array
+    {
+        return [
+            'id_evento'     => self::iReq($r, 'id_evento'),
+            'fecha_hora'    => self::sReq($r, 'fecha_hora'),
+            'id_usuario'    => self::i($r, 'id_usuario'),
+            'entidad'       => self::sReq($r, 'entidad'),
+            'id_registro'   => self::sReq($r, 'id_registro'),
+            'accion'        => self::sReq($r, 'accion'),
+            'valor_antes'   => self::j($r, 'valor_antes'),
+            'valor_despues' => self::j($r, 'valor_despues'),
+        ];
+    }
+
+    /**
+     * Decodifica una columna JSON a objeto (o null). Usado por la auditoría.
+     *
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function j(array $r, string $key): ?array
+    {
+        $v = $r[$key] ?? null;
+        if (! is_string($v) || $v === '') {
+            return null;
+        }
+        $d = json_decode($v, true);
+
+        /** @var array<string, mixed>|null $out */
+        $out = is_array($d) ? $d : null;
+
+        return $out;
+    }
+
     /** @param array<string, mixed> $r */
     private static function b(array $r, string $key): bool
     {

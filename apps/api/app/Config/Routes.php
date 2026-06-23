@@ -88,5 +88,20 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api'], static function
         $routes->post('shelter/ocupacion', 'VerticalController::ocupacionCreate', ['filter' => 'throttle:write']);
         $routes->get('sostenibilidad', 'VerticalController::sostenibilidadIndex', ['filter' => 'throttle:read']);
         $routes->post('sostenibilidad', 'VerticalController::sostenibilidadCreate', ['filter' => 'throttle:write']);
+
+        // --- Fase 4 · Sprint 7: resultados, gobernanza y reportería FECHAC ---
+        // Resultados tipo R (doc 05 §10): captura en su ámbito; bloquea actividades no-R.
+        $routes->post('resultados', 'ResultadoController::create', ['filter' => 'throttle:write']);
+
+        // Gobernanza (doc 05 §11): cualquiera registra solicitudes; solo coordinación resuelve.
+        $routes->get('solicitudes', 'SolicitudController::index', ['filter' => 'throttle:read']);
+        $routes->post('solicitudes', 'SolicitudController::create', ['filter' => 'throttle:write']);
+        $routes->patch('solicitudes/(:num)', 'SolicitudController::resolver/$1', ['filter' => ['rbac:coordinacion', 'throttle:write']]);
+
+        // Auditoría: solo lectura para coordinación/admin/dirección (append-only).
+        $routes->get('auditoria', 'AuditoriaController::index', ['filter' => ['rbac:coordinacion,administrador,direccion', 'throttle:read']]);
+
+        // Exportación FECHAC: coordinación/dirección.
+        $routes->get('export/fechac', 'ExportController::fechac', ['filter' => ['rbac:coordinacion,direccion', 'throttle:read']]);
     });
 });

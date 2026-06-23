@@ -97,4 +97,45 @@ class TableroRepository extends BaseScopedRepository
 
         return (int) $this->aplicarAmbito($builder, $ambito, 'a.id_institucion')->countAllResults();
     }
+
+    /**
+     * Conteo de actividades por tipo (P/E/R) en el ámbito, para el reporte FECHAC.
+     *
+     * @param 'ALL'|list<string> $ambito
+     *
+     * @return array{P:int, E:int, R:int, total:int}
+     */
+    public function actividadesPorTipo(array|string $ambito): array
+    {
+        $builder = db_connect()->table('actividades')->select('tipo_registro, COUNT(*) AS n')->groupBy('tipo_registro');
+        $result  = $this->aplicarAmbito($builder, $ambito, 'id_institucion')->get();
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $result === false ? [] : $result->getResultArray();
+
+        $por = ['P' => 0, 'E' => 0, 'R' => 0, 'total' => 0];
+        foreach ($rows as $r) {
+            $tipo = is_string($r['tipo_registro'] ?? null) ? $r['tipo_registro'] : '';
+            $n    = is_numeric($r['n'] ?? null) ? (int) $r['n'] : 0;
+            if ($tipo === 'P' || $tipo === 'E' || $tipo === 'R') {
+                $por[$tipo] = $n;
+                $por['total'] += $n;
+            }
+        }
+
+        return $por;
+    }
+
+    /**
+     * Resultados (tipo R) reportados en el ámbito.
+     *
+     * @param 'ALL'|list<string> $ambito
+     */
+    public function resultadosReportados(array|string $ambito): int
+    {
+        $builder = db_connect()->table('resultados r')
+            ->join('actividades a', 'a.id_actividad = r.id_actividad');
+
+        return (int) $this->aplicarAmbito($builder, $ambito, 'a.id_institucion')->countAllResults();
+    }
 }

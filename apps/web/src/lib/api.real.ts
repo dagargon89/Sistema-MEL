@@ -20,6 +20,7 @@ import {
   type Actividad,
   type ActividadConHerencia,
   type Alianza,
+  type Auditoria,
   type Componente,
   type Compromiso,
   type DuplicadoEnCola,
@@ -43,8 +44,11 @@ import {
   type ProcesoIncidencia,
   type ProductoEntregable,
   type PropuestaIncidencia,
+  type ReporteFechac,
+  type Resultado,
   type SeguimientoMeta,
   type SesionResp,
+  type Solicitud,
   type SostenibilidadFinanciera,
   type TableroEjecutivo,
 } from "./types";
@@ -87,13 +91,8 @@ function toMeta(p: BackendPager): PageMeta {
   return { page: p.currentPage, per_page: p.perPage, total: p.total, total_pages: p.pageCount };
 }
 
-/** PENDIENTE Fase 2: implementar cada método contra los endpoints del doc 05.
- *  Se exporta el mismo tipo ApiClient para que el interruptor en index.ts compile;
- *  invocarlo antes de implementarlo lanza un error explícito en vez de fallar silencioso. */
-const noImpl = (m: string) => (): never => {
-  throw new ApiError(501, { code: "NOT_IMPLEMENTED", message: `api.real.${m} pendiente (Fase 2).` });
-};
-
+/* Todos los métodos del contrato están implementados (Fases 1–4). El interruptor
+ * VITE_USE_MOCK en index.ts elige entre este cliente real y el mock. */
 export const apiReal: ApiClient = {
   /* ---- Auth (Sprint 1): desempaqueta el envelope { success, data } del doc 05 ---- */
   login: async (input) => {
@@ -209,11 +208,19 @@ export const apiReal: ApiClient = {
   },
   seguimientoMetas: async (p) =>
     (await http.get<{ data: SeguimientoMeta[] }>("/metas/seguimiento", { params: p })).data.data,
-  crearResultado: noImpl("crearResultado"),
-  listarSolicitudes: noImpl("listarSolicitudes"),
-  crearSolicitud: noImpl("crearSolicitud"),
-  resolverSolicitud: noImpl("resolverSolicitud"),
-  listarAuditoria: noImpl("listarAuditoria"),
+  /* ---- Resultados / gobernanza (Fase 4 · Sprint 7) ---- */
+  crearResultado: async (input) => (await http.post<{ data: Resultado }>("/resultados", input)).data.data,
+  listarSolicitudes: async (p) => {
+    const { data } = await http.get<{ data: Solicitud[]; pager: BackendPager }>("/solicitudes", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearSolicitud: async (input) => (await http.post<{ data: Solicitud }>("/solicitudes", input)).data.data,
+  resolverSolicitud: async (id, input) =>
+    (await http.patch<{ data: Solicitud }>(`/solicitudes/${id}`, input)).data.data,
+  listarAuditoria: async (p) => {
+    const { data } = await http.get<{ data: Auditoria[]; pager: BackendPager }>("/auditoria", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
   nombreEvidencia: async (p) =>
     (await http.get<{ data: { nombre: string } }>("/evidencias/nombre", { params: p })).data.data,
   tablero: async (tipo, p) =>
@@ -272,4 +279,8 @@ export const apiReal: ApiClient = {
   },
   crearSostenibilidad: async (input) =>
     (await http.post<{ data: SostenibilidadFinanciera }>("/sostenibilidad", input)).data.data,
+
+  /* ---- Exportación FECHAC (Fase 4 · Sprint 7) ---- */
+  exportarFechac: async (p) =>
+    (await http.get<{ data: ReporteFechac }>("/export/fechac", { params: p })).data.data,
 };
