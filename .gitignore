@@ -1,0 +1,31 @@
+# Dependencias
+node_modules/
+vendor/
+
+# Builds
+dist/
+build/
+/apps/web/dist/
+
+# Entornos / secretos
+.env
+.env.local
+.env.*.local
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / SO
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# PHP / CI4
+# El writable/ de CI4 lo gobierna apps/api/.gitignore: ignora los contenidos de
+# runtime (cache/logs/session/uploads/debugbar) y conserva los index.html, que son
+# necesarios para que exista el WRITEPATH en el checkout de CI.
+phpstan.cache
+.phpunit.cache/

@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+
+jobs:
+  web:
+    name: Web · typecheck · lint · build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+
+  api:
+    name: API · lint · rutas
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: intl, mbstring, mysqli
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: PHP lint (sintaxis de app/)
+        run: find app -name "*.php" -print0 | xargs -0 -n1 php -l
+      - name: Smoke · listado de rutas
+        run: php spark routes
