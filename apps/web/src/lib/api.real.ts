@@ -20,12 +20,21 @@ import {
   type Actividad,
   type ActividadConHerencia,
   type Componente,
+  type DuplicadoEnCola,
   type Eje,
+  type Ejecucion,
+  type EjecucionCreada,
   type ErrorPayload,
+  type EventoProgramado,
   type Institucion,
   type Linea,
   type PageMeta,
+  type Participacion,
+  type ParticipacionAgregada,
+  type ParticipacionCreada,
   type PerfilResp,
+  type Persona,
+  type Proceso,
   type SesionResp,
 } from "./types";
 
@@ -113,20 +122,67 @@ export const apiReal: ApiClient = {
     (await http.get<{ data: Componente[] }>("/catalogos/componentes", { params: p })).data.data,
   listarInstituciones: async () =>
     (await http.get<{ data: Institucion[] }>("/catalogos/instituciones")).data.data,
-  listarProcesos: noImpl("listarProcesos"),
-  crearProceso: noImpl("crearProceso"),
-  listarEventos: noImpl("listarEventos"),
-  crearEvento: noImpl("crearEvento"),
-  listarEjecuciones: noImpl("listarEjecuciones"),
-  obtenerEjecucion: noImpl("obtenerEjecucion"),
-  crearEjecucion: noImpl("crearEjecucion"),
-  validarEjecucion: noImpl("validarEjecucion"),
-  listarParticipaciones: noImpl("listarParticipaciones"),
-  crearParticipacion: noImpl("crearParticipacion"),
-  crearAgregada: noImpl("crearAgregada"),
-  listarPersonas: noImpl("listarPersonas"),
-  colaDuplicados: noImpl("colaDuplicados"),
-  resolverDuplicado: noImpl("resolverDuplicado"),
+  /* ---- Cadena MEL (Sprint 3): procesos → eventos → ejecuciones → participaciones ---- */
+  listarProcesos: async (p) => {
+    const { data } = await http.get<{ data: Proceso[]; pager: BackendPager }>("/procesos", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearProceso: async (input) => {
+    const { data } = await http.post<{ data: Proceso }>("/procesos", input);
+    return data.data;
+  },
+  listarEventos: async (p) => {
+    const { data } = await http.get<{ data: EventoProgramado[]; pager: BackendPager }>("/eventos-programados", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearEvento: async (input) => {
+    const { data } = await http.post<{ data: EventoProgramado }>("/eventos-programados", input);
+    return data.data;
+  },
+  listarEjecuciones: async (p) => {
+    const { data } = await http.get<{ data: Ejecucion[]; pager: BackendPager }>("/ejecuciones", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  obtenerEjecucion: async (id) => (await http.get<{ data: Ejecucion }>(`/ejecuciones/${id}`)).data.data,
+  crearEjecucion: async (input) => {
+    const { data } = await http.post<{ data: EjecucionCreada }>("/ejecuciones", input);
+    return data.data;
+  },
+  validarEjecucion: async (id, input) => {
+    const { data } = await http.patch<{ data: Ejecucion }>(`/ejecuciones/${id}/validacion`, input);
+    return data.data;
+  },
+  listarParticipaciones: async (idEjecucion, p) => {
+    const { data } = await http.get<{ data: Participacion[]; pager: BackendPager }>(
+      `/ejecuciones/${idEjecucion}/participaciones`,
+      { params: p },
+    );
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearParticipacion: async (input) => {
+    const { data } = await http.post<{ data: ParticipacionCreada }>("/participaciones", input);
+    return data.data;
+  },
+  crearAgregada: async (input) => {
+    const { data } = await http.post<{ data: ParticipacionAgregada }>("/participaciones-agregadas", input);
+    return data.data;
+  },
+  listarPersonas: async (p) => {
+    const { data } = await http.get<{ data: Persona[]; pager: BackendPager }>("/personas", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  colaDuplicados: async (p) => {
+    const { data } = await http.get<{ data: DuplicadoEnCola[]; pager: BackendPager }>("/personas/duplicados", {
+      params: p,
+    });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  resolverDuplicado: async (idParticipacion, input) => {
+    const { data } = await http.patch<{ data: Participacion }>(`/personas/duplicados/${idParticipacion}`, input);
+    return data.data;
+  },
   crearProducto: noImpl("crearProducto"),
   listarMetas: noImpl("listarMetas"),
   crearMeta: noImpl("crearMeta"),
@@ -136,6 +192,7 @@ export const apiReal: ApiClient = {
   crearSolicitud: noImpl("crearSolicitud"),
   resolverSolicitud: noImpl("resolverSolicitud"),
   listarAuditoria: noImpl("listarAuditoria"),
-  nombreEvidencia: noImpl("nombreEvidencia"),
+  nombreEvidencia: async (p) =>
+    (await http.get<{ data: { nombre: string } }>("/evidencias/nombre", { params: p })).data.data,
   tablero: noImpl("tablero"),
 };

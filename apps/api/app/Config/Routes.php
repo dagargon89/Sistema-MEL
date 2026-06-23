@@ -32,5 +32,30 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api'], static function
         // Escritura de actividades: coordinación/admin; reclasificar P/E/R solo coordinación (auditado).
         $routes->post('catalogos/actividades', 'ActividadController::create', ['filter' => ['rbac:coordinacion,administrador', 'throttle:write']]);
         $routes->patch('catalogos/actividades/(:segment)/tipo-registro', 'ActividadController::reclasificar/$1', ['filter' => ['rbac:coordinacion', 'throttle:write']]);
+
+        // --- Cadena MEL (Sprint 3): procesos → eventos → ejecuciones → participaciones ---
+        // Lectura: cualquier rol autenticado, acotada al ámbito. Escritura: captura en su ámbito.
+        $routes->get('procesos', 'ProcesoController::index', ['filter' => 'throttle:read']);
+        $routes->post('procesos', 'ProcesoController::create', ['filter' => 'throttle:write']);
+
+        $routes->get('eventos-programados', 'EventoController::index', ['filter' => 'throttle:read']);
+        $routes->post('eventos-programados', 'EventoController::create', ['filter' => 'throttle:write']);
+
+        $routes->get('ejecuciones', 'EjecucionController::index', ['filter' => 'throttle:read']);
+        $routes->get('ejecuciones/(:num)/participaciones', 'EjecucionController::participaciones/$1', ['filter' => 'throttle:read']);
+        $routes->get('ejecuciones/(:num)', 'EjecucionController::ver/$1', ['filter' => 'throttle:read']);
+        $routes->post('ejecuciones', 'EjecucionController::create', ['filter' => 'throttle:write']);
+        $routes->patch('ejecuciones/(:num)/validacion', 'EjecucionController::validar/$1', ['filter' => 'throttle:write']);
+
+        $routes->post('participaciones', 'ParticipacionController::create', ['filter' => 'throttle:write']);
+        $routes->post('participaciones-agregadas', 'ParticipacionController::agregada', ['filter' => 'throttle:write']);
+
+        // Personas + cola de deduplicación: solo coordinación/admin (PII consolidada, doc 05 §5).
+        $routes->get('personas', 'PersonaController::index', ['filter' => ['rbac:coordinacion,administrador', 'throttle:read']]);
+        $routes->get('personas/duplicados', 'PersonaController::duplicados', ['filter' => ['rbac:coordinacion', 'throttle:read']]);
+        $routes->patch('personas/duplicados/(:num)', 'PersonaController::resolver/$1', ['filter' => ['rbac:coordinacion', 'throttle:write']]);
+
+        // Evidencias: nombre normalizado (RF-GOB-113).
+        $routes->get('evidencias/nombre', 'EvidenciaController::nombre', ['filter' => 'throttle:read']);
     });
 });

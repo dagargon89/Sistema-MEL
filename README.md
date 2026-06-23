@@ -56,19 +56,24 @@ cp env.example .env             # rellenar secretos
 php spark serve                 # http://localhost:8080  → GET /api/v1/health
 ```
 
-## Estado (Fase 0 — implementación completa)
+## Estado (Fase 1 — núcleo confiable, en progreso)
+
+Fase 0 (cimientos + demo navegable) y los **Sprints 1–3** de Fase 1 están implementados y verificados (CI verde).
 
 | Pista | Entregable | Estado |
 |---|---|---|
 | B (SPA) | Scaffold + biblioteca de componentes + 19 pantallas contra el mock | ✅ navegable y verificado |
 | A (infra) | Monorepo, `docker-compose`, CI | ✅ |
 | A (API) | Scaffold CI4 + ruta `/api/v1/health` | ✅ responde 200 |
-| A (datos) | Migraciones base (doc 03: dimensiones + gobernanza, FK RESTRICT) + `InitialSeeder` | ✅ verificado en SQLite (PHPUnit) |
+| A (datos) | Migraciones base (dimensiones + gobernanza) + **cadena MEL** (procesos→…→personas), FK RESTRICT | ✅ verificado en SQLite (PHPUnit) |
 | A (calidad) | Gates en CI: PHPUnit + PHPStan nivel 8 (api), Vitest (web) | ✅ |
-| A (auth) | Shield + RBAC + segmentación | ⏳ Fase 1 · Sprint 1 |
+| A (auth) · Sprint 1 | Shield (access tokens) + RBAC + segmentación por institución (ADR-004) | ✅ |
+| A (catálogos) · Sprint 2 | Actividades con herencia + alta/reclasificación auditada; dimensiones | ✅ cableado en `api.real.ts` |
+| A (cadena MEL) · Sprint 3 | Procesos→eventos→ejecuciones→participaciones, máquina de estados, **deduplicación** (ADR-003) | ✅ cableado en `api.real.ts` |
 
-> **Pendiente de Fase 0 fuera de este entorno:** ejecutar `php spark migrate` contra **MySQL real**
-> vía `docker compose up` (aquí no hay Docker; las migraciones se validan en SQLite en memoria) y la
-> **sesión de validación de UX** con Coordinación MEL (doc 09 §8).
+> **Siguiente en Fase 1:** Sprint 4 — `spark mel:import` (migración + conciliación del Excel v1.9; conteos
+> línea base ≈988/762/279/132). **Pendiente fuera de este entorno:** ejecutar `php spark migrate` contra
+> **MySQL real** vía `docker compose up` (aquí no hay Docker; las migraciones se validan en SQLite en
+> memoria) y la **sesión de validación de UX** con Coordinación MEL (doc 09 §8).
 
 El plan por fases completo está descrito en [`Sistema MEL/07-roadmap`](Sistema%20MEL/07-roadmap/07_roadmap_sprints.md).

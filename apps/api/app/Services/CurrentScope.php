@@ -50,6 +50,19 @@ final class CurrentScope
     }
 
     /**
+     * ¿El ámbito de la petición cubre esta institución? Los roles globales
+     * (`data.viewAll`) cubren cualquiera; los demás, solo las suyas (ADR-004).
+     */
+    public function cubre(?string $institucion): bool
+    {
+        if ($this->global) {
+            return true;
+        }
+
+        return $institucion !== null && in_array($institucion, $this->instituciones, true);
+    }
+
+    /**
      * Ámbito para los Repositories: 'ALL' si el rol es global (omite el filtro),
      * o la lista de instituciones permitidas (vacía ⇒ denegación por defecto).
      *
