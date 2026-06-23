@@ -166,6 +166,56 @@ final class Shape
         ];
     }
 
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function meta(array $r): array
+    {
+        return [
+            'id_meta'           => self::iReq($r, 'id_meta'),
+            'id_actividad'      => self::sReq($r, 'id_actividad'),
+            'unidad_meta'       => self::s($r, 'unidad_meta'),
+            'unidad_especifica' => self::s($r, 'unidad_especifica'),
+            'meta_anual_total'  => self::f($r, 'meta_anual_total'),
+            'observaciones'     => self::s($r, 'observaciones'),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $r
+     *
+     * @return array<string, mixed>
+     */
+    public static function producto(array $r): array
+    {
+        return [
+            'id_producto'              => self::iReq($r, 'id_producto'),
+            'id_actividad'             => self::sReq($r, 'id_actividad'),
+            'nombre_producto'          => self::sReq($r, 'nombre_producto'),
+            'tipo_producto'            => self::s($r, 'tipo_producto'),
+            'fecha_inicio'             => self::s($r, 'fecha_inicio'),
+            'fecha_entrega'            => self::s($r, 'fecha_entrega'),
+            'responsable'              => self::s($r, 'responsable'),
+            'cantidad'                 => self::i($r, 'cantidad'),
+            'unidad_medida'            => self::s($r, 'unidad_medida'),
+            'estatus'                  => self::sReq($r, 'estatus'),
+            'descripcion'              => self::s($r, 'descripcion'),
+            'evidencia_url'            => self::s($r, 'evidencia_url'),
+            'nombre_archivo_evidencia' => self::s($r, 'nombre_archivo_evidencia'),
+            'control_registro'         => self::sReq($r, 'control_registro'),
+        ];
+    }
+
+    /** @param array<string, mixed> $r */
+    private static function f(array $r, string $key): ?float
+    {
+        $v = $r[$key] ?? null;
+
+        return is_numeric($v) ? (float) $v : null;
+    }
+
     /** @param array<string, mixed> $r */
     private static function i(array $r, string $key): ?int
     {

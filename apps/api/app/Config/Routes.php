@@ -57,5 +57,17 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api'], static function
 
         // Evidencias: nombre normalizado (RF-GOB-113).
         $routes->get('evidencias/nombre', 'EvidenciaController::nombre', ['filter' => 'throttle:read']);
+
+        // --- Fase 2 · Sprint 5: metas, productos y tableros ---
+        // Metas: lectura acotada al ámbito; alta solo coordinación. Seguimiento con semáforo.
+        $routes->get('metas/seguimiento', 'MetaController::seguimiento', ['filter' => 'throttle:read']);
+        $routes->get('metas', 'MetaController::index', ['filter' => 'throttle:read']);
+        $routes->post('metas', 'MetaController::create', ['filter' => ['rbac:coordinacion', 'throttle:write']]);
+
+        // Productos/entregables (tipo E): captura en su ámbito.
+        $routes->post('productos', 'ProductoController::create', ['filter' => 'throttle:write']);
+
+        // Tableros con KPIs reales (control=OK), acotados al ámbito.
+        $routes->get('tableros/(:segment)', 'TableroController::ver/$1', ['filter' => 'throttle:read']);
     });
 });

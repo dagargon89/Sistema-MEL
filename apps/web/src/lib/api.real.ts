@@ -28,6 +28,7 @@ import {
   type EventoProgramado,
   type Institucion,
   type Linea,
+  type Meta,
   type PageMeta,
   type Participacion,
   type ParticipacionAgregada,
@@ -35,7 +36,10 @@ import {
   type PerfilResp,
   type Persona,
   type Proceso,
+  type ProductoEntregable,
+  type SeguimientoMeta,
   type SesionResp,
+  type TableroEjecutivo,
 } from "./types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
@@ -183,10 +187,21 @@ export const apiReal: ApiClient = {
     const { data } = await http.patch<{ data: Participacion }>(`/personas/duplicados/${idParticipacion}`, input);
     return data.data;
   },
-  crearProducto: noImpl("crearProducto"),
-  listarMetas: noImpl("listarMetas"),
-  crearMeta: noImpl("crearMeta"),
-  seguimientoMetas: noImpl("seguimientoMetas"),
+  /* ---- Productos / metas / tableros (Fase 2 · Sprint 5) ---- */
+  crearProducto: async (input) => {
+    const { data } = await http.post<{ data: ProductoEntregable }>("/productos", input);
+    return data.data;
+  },
+  listarMetas: async (p) => {
+    const { data } = await http.get<{ data: Meta[]; pager: BackendPager }>("/metas", { params: p });
+    return { data: data.data, meta: toMeta(data.pager) };
+  },
+  crearMeta: async (input) => {
+    const { data } = await http.post<{ data: Meta }>("/metas", input);
+    return data.data;
+  },
+  seguimientoMetas: async (p) =>
+    (await http.get<{ data: SeguimientoMeta[] }>("/metas/seguimiento", { params: p })).data.data,
   crearResultado: noImpl("crearResultado"),
   listarSolicitudes: noImpl("listarSolicitudes"),
   crearSolicitud: noImpl("crearSolicitud"),
@@ -194,5 +209,6 @@ export const apiReal: ApiClient = {
   listarAuditoria: noImpl("listarAuditoria"),
   nombreEvidencia: async (p) =>
     (await http.get<{ data: { nombre: string } }>("/evidencias/nombre", { params: p })).data.data,
-  tablero: noImpl("tablero"),
+  tablero: async (tipo, p) =>
+    (await http.get<{ data: TableroEjecutivo }>(`/tableros/${tipo}`, { params: p })).data.data,
 };
