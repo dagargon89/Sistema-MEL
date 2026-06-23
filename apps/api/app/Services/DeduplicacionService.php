@@ -72,53 +72,24 @@ class DeduplicacionService
         $colonia = $this->str($d, 'colonia_persona') ?? '';
         $fechaEj = is_string($ej['fecha_ejecucion_real'] ?? null) ? $ej['fecha_ejecucion_real'] : null;
 
-        $clave    = self::calcularClave($apPat, $apMat, $nombres, $anio, $tel);
-        $existente = $this->personaPorClave($clave);
-
-        $idPersona = null;
-        $alerta    = 'OK';
-        $control   = 'OK';
-        $detalle   = null;
-
         $db = db_connect();
         $db->transStart();
-
-        if ($existente !== null) {
-            // Misma persona (misma clave): consolida y suma participación.
-            $idPersona = is_string($existente['id_persona']) ? $existente['id_persona'] : null;
-            if ($idPersona !== null) {
-                $db->table('personas')->where('id_persona', $idPersona)
-                    ->set('total_participaciones', 'total_participaciones + 1', false)->update();
-            }
-        } else {
-            $choque = $this->choquePorTelefono($tel, $clave);
-            if ($choque !== null) {
-                // Mismo teléfono, clave distinta -> sospecha; va a la cola, no se fusiona (RN-063).
-                $alerta  = 'DUPLICADO_EN_CAPTURA';
-                $control = 'REVISAR';
-                $detalle = "Mismo teléfono que {$choque['id_persona']} ({$choque['nombre_completo']}). Revisar.";
-            } else {
-                // Clave nueva -> nace una persona única.
-                $idPersona = $this->siguienteIdPersona();
-                $db->table('personas')->insert([
-                    'id_persona'            => $idPersona,
-                    'nombres'               => $nombres,
-                    'apellido_paterno'      => $apPat,
-                    'apellido_materno'      => $apMat,
-                    'nombre_completo'       => trim("{$nombres} {$apPat} " . ($apMat ?? '')),
-                    'anio_nacimiento'       => $anio,
-                    'sexo'                  => $sexo,
-                    'telefono'              => $tel,
-                    'correo'                => $correo,
-                    'colonia'               => $colonia,
-                    'id_datosbeneficiario'  => $clave,
-                    'primera_participacion' => $fechaEj,
-                    'total_participaciones' => 1,
-                    'control_registro'      => 'OK',
-                    'decision_coordinacion' => null,
-                ]);
-            }
-        }
+        $r = $this->resolverPersona([
+            'nombres'             => $nombres,
+            'apellido_paterno'    => $apPat,
+            'apellido_materno'    => $apMat,
+            'anio_nacimiento'     => $anio,
+            'sexo'                => $sexo,
+            'telefono'            => $tel,
+            'correo'              => $correo,
+            'colonia'             => $colonia,
+            'fecha_participacion' => $fechaEj,
+        ]);
+        $clave     = $r['clave'];
+        $idPersona = $r['id_persona'];
+        $alerta    = $r['alerta'];
+        $control   = $r['control'];
+        $detalle   = $r['detalle'];
 
         $controlAuto = $control === 'REVISAR' ? 'REVISAR' : 'OK';
         $db->table('participaciones')->insert([
@@ -149,6 +120,67 @@ class DeduplicacionService
         $db->transComplete();
 
         return ['id_participacion' => $idPar, 'id_persona' => $idPersona, 'control_registro' => $control, 'alerta_duplicado' => $alerta];
+    }
+
+    /**
+     * Núcleo de deduplicación compartido por la captura nominal y la migración (ADR-003):
+     * decide la persona (consolidar misma clave / cola por choque de teléfono / alta nueva)
+     * y refleja el efecto en `personas`. Debe ejecutarse dentro de una transacción del llamador.
+     *
+     * @param array{nombres:string, apellido_paterno:string, apellido_materno:string|null, anio_nacimiento:int|null, sexo:string, telefono:string, correo:string|null, colonia:string|null, fecha_participacion:string|null} $p
+     *
+     * @return array{clave:string, id_persona:string|null, control:string, alerta:string, detalle:string|null}
+     */
+    public function resolverPersona(array $p): array
+    {
+        $clave     = self::calcularClave($p['apellido_paterno'], $p['apellido_materno'], $p['nombres'], $p['anio_nacimiento'], $p['telefono']);
+        $existente = $this->personaPorClave($clave);
+        $db        = db_connect();
+
+        if ($existente !== null) {
+            // Misma persona (misma clave): consolida y suma participación.
+            $idPersona = is_string($existente['id_persona']) ? $existente['id_persona'] : null;
+            if ($idPersona !== null) {
+                $db->table('personas')->where('id_persona', $idPersona)
+                    ->set('total_participaciones', 'total_participaciones + 1', false)->update();
+            }
+
+            return ['clave' => $clave, 'id_persona' => $idPersona, 'control' => 'OK', 'alerta' => 'OK', 'detalle' => null];
+        }
+
+        $choque = $this->choquePorTelefono($p['telefono'], $clave);
+        if ($choque !== null) {
+            // Mismo teléfono, clave distinta -> sospecha; va a la cola, no se fusiona (RN-063).
+            return [
+                'clave'      => $clave,
+                'id_persona' => null,
+                'control'    => 'REVISAR',
+                'alerta'     => 'DUPLICADO_EN_CAPTURA',
+                'detalle'    => "Mismo teléfono que {$choque['id_persona']} ({$choque['nombre_completo']}). Revisar.",
+            ];
+        }
+
+        // Clave nueva -> nace una persona única (regenerada, nunca copiada del Excel).
+        $idPersona = $this->siguienteIdPersona();
+        $db->table('personas')->insert([
+            'id_persona'            => $idPersona,
+            'nombres'               => $p['nombres'],
+            'apellido_paterno'      => $p['apellido_paterno'],
+            'apellido_materno'      => $p['apellido_materno'],
+            'nombre_completo'       => trim("{$p['nombres']} {$p['apellido_paterno']} " . ($p['apellido_materno'] ?? '')),
+            'anio_nacimiento'       => $p['anio_nacimiento'],
+            'sexo'                  => $p['sexo'],
+            'telefono'              => $p['telefono'],
+            'correo'                => $p['correo'],
+            'colonia'               => $p['colonia'],
+            'id_datosbeneficiario'  => $clave,
+            'primera_participacion' => $p['fecha_participacion'],
+            'total_participaciones' => 1,
+            'control_registro'      => 'OK',
+            'decision_coordinacion' => null,
+        ]);
+
+        return ['clave' => $clave, 'id_persona' => $idPersona, 'control' => 'OK', 'alerta' => 'OK', 'detalle' => null];
     }
 
     /**

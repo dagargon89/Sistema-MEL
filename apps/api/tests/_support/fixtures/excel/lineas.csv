@@ -1,0 +1,2 @@
+id_linea,num_linea,clave_linea_corta,nombre,id_eje,orden_visualizacion,estatus
+LIN_00001,1,L1,Línea de prueba,EJE_00001,1,activo

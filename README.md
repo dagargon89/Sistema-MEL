@@ -56,9 +56,9 @@ cp env.example .env             # rellenar secretos
 php spark serve                 # http://localhost:8080  → GET /api/v1/health
 ```
 
-## Estado (Fase 1 — núcleo confiable, en progreso)
+## Estado (Fase 1 — núcleo confiable, completa)
 
-Fase 0 (cimientos + demo navegable) y los **Sprints 1–3** de Fase 1 están implementados y verificados (CI verde).
+Fase 0 (cimientos + demo navegable) y los **Sprints 1–4** de Fase 1 están implementados y verificados (CI verde).
 
 | Pista | Entregable | Estado |
 |---|---|---|
@@ -70,10 +70,14 @@ Fase 0 (cimientos + demo navegable) y los **Sprints 1–3** de Fase 1 están imp
 | A (auth) · Sprint 1 | Shield (access tokens) + RBAC + segmentación por institución (ADR-004) | ✅ |
 | A (catálogos) · Sprint 2 | Actividades con herencia + alta/reclasificación auditada; dimensiones | ✅ cableado en `api.real.ts` |
 | A (cadena MEL) · Sprint 3 | Procesos→eventos→ejecuciones→participaciones, máquina de estados, **deduplicación** (ADR-003) | ✅ cableado en `api.real.ts` |
+| A (migración) · Sprint 4 | `spark mel:import` (limpia `#REF!`, descarta plantillas, regenera personas, **concilia**) | ✅ mecanismo verificado vs fixture |
 
-> **Siguiente en Fase 1:** Sprint 4 — `spark mel:import` (migración + conciliación del Excel v1.9; conteos
-> línea base ≈988/762/279/132). **Pendiente fuera de este entorno:** ejecutar `php spark migrate` contra
-> **MySQL real** vía `docker compose up` (aquí no hay Docker; las migraciones se validan en SQLite en
-> memoria) y la **sesión de validación de UX** con Coordinación MEL (doc 09 §8).
+> **Carga real (fuera de este entorno):** colocar los CSV del Excel v1.9 en `apps/api/data/excel/`
+> (PII, no se versionan) y correr `php spark mel:import` contra **MySQL real** (`docker compose up`);
+> la conciliación debe cuadrar con la línea base ≈988/762/279/132 (doc 06 §4). Aquí el mecanismo se
+> valida en SQLite con un fixture representativo. Pendiente también la **sesión de validación de UX**
+> con Coordinación MEL (doc 09 §8).
+>
+> **Siguiente:** Fase 2 — metas, productos y tableros (Sprint 5).
 
 El plan por fases completo está descrito en [`Sistema MEL/07-roadmap`](Sistema%20MEL/07-roadmap/07_roadmap_sprints.md).

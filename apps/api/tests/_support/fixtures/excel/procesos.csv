@@ -1,0 +1,2 @@
+id_proceso,nombre,tipo_programacion,id_actividad,fecha_inicio,fecha_fin,total_sesiones_programadas,responsable,contacto,estatus,observaciones
+1,Ciclo de talleres primavera,MULTI_SESION_PROGRAMADA,ACT_001,2026-06-01,2026-07-01,4,Coordinación Norte,norte@demo.test,activo,

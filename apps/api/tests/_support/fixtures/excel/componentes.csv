@@ -1,0 +1,2 @@
+id_componente,num_componente,clave_componente,nombre,id_institucion,orden_visualizacion,estatus
+COM_00001,1,C1,Componente de prueba,INS_00001,1,activo

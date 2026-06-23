@@ -1,0 +1,3 @@
+id_ejecucion,id_evento_programado,fecha_ejecucion_real,hora_inicio_real,hora_finalizacion_real,lugar_real,colonia_real,responsable_real,estatus_ejecucion,tipo_registro_participacion,total_participantes,evidencia_url,nombre_archivo_evidencia,resumen_narrativo,control_registro,observaciones
+100,10,2026-06-10,10:05:00,12:10:00,Centro Comunitario Norte,Independencia,Laura Méndez,ejecutada,Nominal,5,https://drive.google.com/file/d/abc/view,CPJ_EVID_20260610_10_ACT001_001.pdf,Primera sesión del taller con registro nominal completo.,OK,
+101,11,2026-06-17,09:00:00,11:00:00,Centro Comunitario Norte,Independencia,Laura Méndez,ejecutada,Agregado,8,https://drive.google.com/file/d/def/view,CPJ_EVID_20260617_11_ACT001_001.pdf,Conteo agregado por confidencialidad.,AGREGADO,

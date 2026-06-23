@@ -1,0 +1,3 @@
+id_evento_programado,id_actividad,id_proceso,tipo_programacion,fecha_inicio,fecha_finalizacion,hora_inicio,hora_finalizacion,modalidad,lugar,calle_y_numero,colonia,responsable,contacto,estatus,num_sesion,total_sesiones,observaciones
+10,ACT_001,1,MULTI_SESION_PROGRAMADA,2026-06-10,2026-06-10,10:00:00,12:00:00,Presencial,Centro Comunitario Norte,Av. Tecnológico 1200,Independencia,Laura Méndez,lmendez@demo.test,ejecutado,1,4,
+11,ACT_001,1,MULTI_SESION_PROGRAMADA,2026-06-17,2026-06-17,10:00:00,12:00:00,Presencial,Centro Comunitario Norte,Av. Tecnológico 1200,Independencia,Laura Méndez,lmendez@demo.test,ejecutado,2,4,
