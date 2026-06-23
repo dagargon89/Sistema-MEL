@@ -6,7 +6,6 @@ vendor/
 dist/
 build/
 /apps/web/dist/
-writable/
 
 # Entornos / secretos
 .env
@@ -25,6 +24,8 @@ npm-debug.log*
 *.swp
 
 # PHP / CI4
-/apps/api/writable/
+# El writable/ de CI4 lo gobierna apps/api/.gitignore: ignora los contenidos de
+# runtime (cache/logs/session/uploads/debugbar) y conserva los index.html, que son
+# necesarios para que exista el WRITEPATH en el checkout de CI.
 phpstan.cache
 .phpunit.cache/
