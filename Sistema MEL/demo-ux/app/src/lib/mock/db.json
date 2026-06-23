@@ -1,0 +1,182 @@
+{
+  "_demo": {
+    "descripcion": "Espejo EXACTO del DDL (doc 03). Una clave de nivel superior por tabla del DDL. Datos ficticios sin PII real (correos @demo.test, teléfonos y nombres inventados). 'usuarios' es stand-in del modelo de dominio sobre Shield, solo para el demo.",
+    "demo_now": "2026-06-23T09:00:00-06:00",
+    "periodo_actual": "M06",
+    "ciclo_poa_inicio": "2026-01",
+    "casos_qa": {
+      "QA1_cadena_referencial": "PROC-1 (MULTI_SESION) agrupa EVP 88 y 89; EVP 88 tiene EJEC 132 con 3 participaciones nominales; imposible participación sin ejecución.",
+      "QA2_dedup_misma_persona": "PAR 988 ('José Pérez') y PAR 990 ('Jose Perez', sin acento, mismo teléfono) comparten id_persona PER_00762; clave id_datosbeneficiario idéntica por colación acento-insensible.",
+      "QA3_cola_revisar": "PAR 991 ('Maria Garcia') entra a la cola con alerta_duplicado=DUPLICADO_EN_CAPTURA y control_registro=REVISAR; sugiere PER_00120 con score 0.94.",
+      "QA4_incompleto": "EJEC 133 sin resumen_narrativo ni evidencia -> control_registro=INCOMPLETO; no cuenta en KPIs.",
+      "QA5_bloqueo_tipo_E": "ACT_048 es tipo E -> no aparece en el formulario de ejecución; sí en productos_entregables.",
+      "QA6_caso_CD_sin_rezago": "ACT_094 es caso C con avance 0 en M06 -> semáforo CORTE_AL_CIERRE, no ROJO.",
+      "QA7_ambito_institucion": "usuario 12 (capturista) solo tiene ámbito INS_00002; no debe ver actividades de INS_00001."
+    },
+    "linea_base_conciliacion": {
+      "nota": "El db.json del demo es una MUESTRA representativa, no la migración completa. La conciliación real (≈988 participaciones, ≈762 personas, ≈279 eventos, ≈132 ejecuciones, 236 actividades) se valida en Fase 2 con el Excel v1.9. Aquí se siembran los registros mínimos para recorrer cada flujo y estado."
+    }
+  },
+
+  "ejes": [
+    { "id_eje": "EJE_00001", "num_eje_original": 1, "clave_eje_corto": "EJE1", "nombre": "Cohesión y tejido social", "orden_visualizacion": 1 },
+    { "id_eje": "EJE_00002", "num_eje_original": 2, "clave_eje_corto": "EJE2", "nombre": "Desarrollo económico inclusivo", "orden_visualizacion": 2 },
+    { "id_eje": "EJE_00003", "num_eje_original": 3, "clave_eje_corto": "EJE3", "nombre": "Gobernanza y participación", "orden_visualizacion": 3 }
+  ],
+
+  "lineas": [
+    { "id_linea": "LIN_00001", "num_linea": 1, "clave_linea_corta": "LIN1", "nombre": "Prevención de violencias", "id_eje": "EJE_00001", "orden_visualizacion": 1, "estatus": "activo" },
+    { "id_linea": "LIN_00002", "num_linea": 2, "clave_linea_corta": "LIN2", "nombre": "Acompañamiento psicosocial", "id_eje": "EJE_00001", "orden_visualizacion": 2, "estatus": "activo" },
+    { "id_linea": "LIN_00003", "num_linea": 3, "clave_linea_corta": "LIN3", "nombre": "Empleabilidad y oficios", "id_eje": "EJE_00002", "orden_visualizacion": 3, "estatus": "activo" },
+    { "id_linea": "LIN_00004", "num_linea": 4, "clave_linea_corta": "LIN4", "nombre": "Incidencia en política pública", "id_eje": "EJE_00003", "orden_visualizacion": 4, "estatus": "activo" }
+  ],
+
+  "instituciones": [
+    { "id_institucion": "INS_00001", "num_institucion_original": 1, "nombre": "Centro Comunitario Norte", "estatus": "activo", "orden_visualizacion": 1 },
+    { "id_institucion": "INS_00002", "num_institucion_original": 2, "nombre": "Casa de Atención Integral", "estatus": "activo", "orden_visualizacion": 2 },
+    { "id_institucion": "INS_00003", "num_institucion_original": 3, "nombre": "Shelter Refugio Seguro", "estatus": "activo", "orden_visualizacion": 3 }
+  ],
+
+  "componentes": [
+    { "id_componente": "COM_00001", "num_componente": 1, "clave_componente": "C1", "nombre": "Talleres preventivos", "id_institucion": "INS_00001", "orden_visualizacion": 1, "estatus": "activo" },
+    { "id_componente": "COM_00002", "num_componente": 2, "clave_componente": "C2", "nombre": "Atención psicológica", "id_institucion": "INS_00002", "orden_visualizacion": 2, "estatus": "activo" },
+    { "id_componente": "COM_00003", "num_componente": 3, "clave_componente": "C3", "nombre": "Vinculación laboral", "id_institucion": "INS_00002", "orden_visualizacion": 3, "estatus": "activo" },
+    { "id_componente": "COM_00004", "num_componente": 4, "clave_componente": "C4", "nombre": "Hospedaje y resguardo", "id_institucion": "INS_00003", "orden_visualizacion": 4, "estatus": "activo" }
+  ],
+
+  "actividades": [
+    { "id_actividad": "ACT_030", "num_actividad": 30, "nombre": "Asesoría a propuestas comunitarias", "id_eje": "EJE_00003", "id_linea": "LIN_00004", "id_componente": "COM_00002", "id_institucion": "INS_00002", "tipo_registro": "P", "caso_excepcional": null },
+    { "id_actividad": "ACT_031", "num_actividad": 31, "nombre": "Taller de prevención de violencias", "id_eje": "EJE_00001", "id_linea": "LIN_00001", "id_componente": "COM_00001", "id_institucion": "INS_00001", "tipo_registro": "P", "caso_excepcional": null },
+    { "id_actividad": "ACT_052", "num_actividad": 52, "nombre": "Sesión psicológica individual", "id_eje": "EJE_00001", "id_linea": "LIN_00002", "id_componente": "COM_00002", "id_institucion": "INS_00002", "tipo_registro": "P", "caso_excepcional": "A" },
+    { "id_actividad": "ACT_094", "num_actividad": 94, "nombre": "Seguimiento a certificación de oficios", "id_eje": "EJE_00002", "id_linea": "LIN_00003", "id_componente": "COM_00003", "id_institucion": "INS_00002", "tipo_registro": "P", "caso_excepcional": "C" },
+    { "id_actividad": "ACT_048", "num_actividad": 48, "nombre": "Alianza interinstitucional firmada", "id_eje": "EJE_00003", "id_linea": "LIN_00004", "id_componente": "COM_00002", "id_institucion": "INS_00002", "tipo_registro": "E", "caso_excepcional": null },
+    { "id_actividad": "ACT_120", "num_actividad": 120, "nombre": "Manual metodológico publicado", "id_eje": "EJE_00003", "id_linea": "LIN_00004", "id_componente": "COM_00002", "id_institucion": "INS_00002", "tipo_registro": "E", "caso_excepcional": null },
+    { "id_actividad": "ACT_200", "num_actividad": 200, "nombre": "Reducción de reincidencia de violencia", "id_eje": "EJE_00001", "id_linea": "LIN_00001", "id_componente": "COM_00001", "id_institucion": "INS_00001", "tipo_registro": "R", "caso_excepcional": null },
+    { "id_actividad": "ACT_224", "num_actividad": 224, "nombre": "Operación del shelter", "id_eje": "EJE_00001", "id_linea": "LIN_00002", "id_componente": "COM_00004", "id_institucion": "INS_00003", "tipo_registro": "P", "caso_excepcional": "B" },
+    { "id_actividad": "ACT_230", "num_actividad": 230, "nombre": "Sostenibilidad del programa de oficios", "id_eje": "EJE_00002", "id_linea": "LIN_00003", "id_componente": "COM_00003", "id_institucion": "INS_00002", "tipo_registro": "P", "caso_excepcional": "D" }
+  ],
+
+  "procesos": [
+    { "id_proceso": 1, "nombre": "Ciclo de talleres preventivos primavera 2026", "tipo_programacion": "MULTI_SESION_PROGRAMADA", "id_actividad": "ACT_031", "fecha_inicio": "2026-06-01", "fecha_fin": "2026-07-15", "total_sesiones_programadas": 6, "responsable": "Coordinación Norte", "contacto": "norte@demo.test", "estatus": "activo", "observaciones": "Grupo de 25 participantes." },
+    { "id_proceso": 2, "nombre": "Asesorías de incidencia trimestre 2", "tipo_programacion": "PROCESO_CONTINUO", "id_actividad": "ACT_030", "fecha_inicio": "2026-04-01", "fecha_fin": null, "total_sesiones_programadas": null, "responsable": "Equipo Incidencia", "contacto": "incidencia@demo.test", "estatus": "activo", "observaciones": null }
+  ],
+
+  "eventos_programados": [
+    { "id_evento_programado": 88, "id_actividad": "ACT_031", "id_proceso": 1, "tipo_programacion": "MULTI_SESION_PROGRAMADA", "fecha_inicio": "2026-06-10", "fecha_finalizacion": "2026-06-10", "hora_inicio": "10:00:00", "hora_finalizacion": "12:00:00", "modalidad": "Presencial", "lugar": "Centro Comunitario Norte", "calle_y_numero": "Av. Tecnológico 1200", "colonia": "Independencia", "responsable": "Laura Méndez", "contacto": "lmendez@demo.test", "estatus": "ejecutado", "num_sesion": 1, "total_sesiones": 6, "observaciones": null },
+    { "id_evento_programado": 89, "id_actividad": "ACT_031", "id_proceso": 1, "tipo_programacion": "MULTI_SESION_PROGRAMADA", "fecha_inicio": "2026-06-17", "fecha_finalizacion": "2026-06-17", "hora_inicio": "10:00:00", "hora_finalizacion": "12:00:00", "modalidad": "Presencial", "lugar": "Centro Comunitario Norte", "calle_y_numero": "Av. Tecnológico 1200", "colonia": "Independencia", "responsable": "Laura Méndez", "contacto": "lmendez@demo.test", "estatus": "programado", "num_sesion": 2, "total_sesiones": 6, "observaciones": null },
+    { "id_evento_programado": 90, "id_actividad": "ACT_030", "id_proceso": 2, "tipo_programacion": "PROCESO_CONTINUO", "fecha_inicio": "2026-06-15", "fecha_finalizacion": "2026-06-15", "hora_inicio": "09:00:00", "hora_finalizacion": "11:00:00", "modalidad": "Virtual", "lugar": "Zoom", "calle_y_numero": null, "colonia": null, "responsable": "Equipo Incidencia", "contacto": "incidencia@demo.test", "estatus": "ejecutado", "num_sesion": null, "total_sesiones": null, "observaciones": null },
+    { "id_evento_programado": 91, "id_actividad": "ACT_052", "id_proceso": null, "tipo_programacion": "SESION_UNICA", "fecha_inicio": "2026-06-12", "fecha_finalizacion": "2026-06-12", "hora_inicio": "08:00:00", "hora_finalizacion": "14:00:00", "modalidad": "Presencial", "lugar": "Casa de Atención Integral", "calle_y_numero": "Calle Mina 45", "colonia": "Centro", "responsable": "Psic. Daniela Ruiz", "contacto": "druiz@demo.test", "estatus": "ejecutado", "num_sesion": null, "total_sesiones": null, "observaciones": "Sesiones individuales caso A." },
+    { "id_evento_programado": 92, "id_actividad": "ACT_031", "id_proceso": 1, "tipo_programacion": "MULTI_SESION_PROGRAMADA", "fecha_inicio": "2026-06-24", "fecha_finalizacion": "2026-06-24", "hora_inicio": "10:00:00", "hora_finalizacion": "12:00:00", "modalidad": "Presencial", "lugar": "Centro Comunitario Norte", "calle_y_numero": "Av. Tecnológico 1200", "colonia": "Independencia", "responsable": "Laura Méndez", "contacto": "lmendez@demo.test", "estatus": "cancelado", "num_sesion": 3, "total_sesiones": 6, "observaciones": "Cancelado por contingencia climática." }
+  ],
+
+  "ejecuciones": [
+    { "id_ejecucion": 132, "id_evento_programado": 88, "fecha_ejecucion_real": "2026-06-10", "hora_inicio_real": "10:05:00", "hora_finalizacion_real": "12:10:00", "lugar_real": "Centro Comunitario Norte", "colonia_real": "Independencia", "responsable_real": "Laura Méndez", "estatus_ejecucion": "ejecutada", "tipo_registro_participacion": "Nominal", "total_participantes": 3, "evidencia_url": "https://drive.google.com/file/d/abc123/view", "nombre_archivo_evidencia": "CPJ_EVID_20260610_88_ACT031_001.pdf", "resumen_narrativo": "Se realizó la primera sesión del taller con 25 convocados; 3 registraron datos nominales completos. Se abordó el tema de identificación de violencias.", "control_registro": "OK", "observaciones": null },
+    { "id_ejecucion": 133, "id_evento_programado": 90, "fecha_ejecucion_real": "2026-06-15", "hora_inicio_real": "09:00:00", "hora_finalizacion_real": null, "lugar_real": "Zoom", "colonia_real": null, "responsable_real": "Equipo Incidencia", "estatus_ejecucion": "ejecutada", "tipo_registro_participacion": "Nominal", "total_participantes": null, "evidencia_url": null, "nombre_archivo_evidencia": null, "resumen_narrativo": null, "control_registro": "INCOMPLETO", "observaciones": "Falta resumen narrativo y evidencia para validar." },
+    { "id_ejecucion": 134, "id_evento_programado": 91, "fecha_ejecucion_real": "2026-06-12", "hora_inicio_real": "08:00:00", "hora_finalizacion_real": "14:00:00", "lugar_real": "Casa de Atención Integral", "colonia_real": "Centro", "responsable_real": "Psic. Daniela Ruiz", "estatus_ejecucion": "ejecutada", "tipo_registro_participacion": "Agregado", "total_participantes": 8, "evidencia_url": "https://drive.google.com/file/d/def456/view", "nombre_archivo_evidencia": "CPJ_EVID_20260612_91_ACT052_001.pdf", "resumen_narrativo": "Jornada de 8 sesiones psicológicas individuales. Por confidencialidad clínica se registra como conteo agregado.", "control_registro": "AGREGADO", "observaciones": null }
+  ],
+
+  "personas": [
+    { "id_persona": "PER_00762", "nombres": "José", "apellido_paterno": "Pérez", "apellido_materno": "López", "nombre_completo": "José Pérez López", "anio_nacimiento": 1990, "sexo": "M", "telefono": "6561234567", "correo": "jperez@demo.test", "colonia": "Independencia", "id_datosbeneficiario": "PEREZLOPEZJOSE1990_6561234567______", "primera_participacion": "2026-06-10", "total_participaciones": 2, "control_registro": "OK", "decision_coordinacion": null },
+    { "id_persona": "PER_00763", "nombres": "Ana", "apellido_paterno": "Martínez", "apellido_materno": "Soto", "nombre_completo": "Ana Martínez Soto", "anio_nacimiento": 1985, "sexo": "F", "telefono": "6569876543", "correo": null, "colonia": "Independencia", "id_datosbeneficiario": "MARTINEZSOTOANA1985_6569876543______", "primera_participacion": "2026-06-10", "total_participaciones": 1, "control_registro": "OK", "decision_coordinacion": null },
+    { "id_persona": "PER_00120", "nombres": "María", "apellido_paterno": "García", "apellido_materno": "Reyes", "nombre_completo": "María García Reyes", "anio_nacimiento": 1992, "sexo": "F", "telefono": "6565551212", "correo": "mgarcia@demo.test", "colonia": "Centro", "id_datosbeneficiario": "GARCIAREYESMARIA1992_6565551212______", "primera_participacion": "2026-05-20", "total_participaciones": 4, "control_registro": "OK", "decision_coordinacion": null }
+  ],
+
+  "participaciones": [
+    { "id_participacion": 988, "id_ejecucion": 132, "id_persona": "PER_00762", "nombres": "José", "apellido_paterno": "Pérez", "apellido_materno": "López", "anio_nacimiento": 1990, "sexo": "M", "telefono": "6561234567", "correo": "jperez@demo.test", "colonia_persona": "Independencia", "id_datosbeneficiario": "PEREZLOPEZJOSE1990_6561234567______", "alerta_duplicado": "OK", "fecha_participacion": "2026-06-10", "control_registro": "OK", "control_automatico": "OK", "decision_coordinacion": null, "detalle_validacion": null },
+    { "id_participacion": 989, "id_ejecucion": 132, "id_persona": "PER_00763", "nombres": "Ana", "apellido_paterno": "Martínez", "apellido_materno": "Soto", "anio_nacimiento": 1985, "sexo": "F", "telefono": "6569876543", "correo": null, "colonia_persona": "Independencia", "id_datosbeneficiario": "MARTINEZSOTOANA1985_6569876543______", "alerta_duplicado": "OK", "fecha_participacion": "2026-06-10", "control_registro": "OK", "control_automatico": "OK", "decision_coordinacion": null, "detalle_validacion": null },
+    { "id_participacion": 990, "id_ejecucion": 132, "id_persona": "PER_00762", "nombres": "Jose", "apellido_paterno": "Perez", "apellido_materno": "Lopez", "anio_nacimiento": 1990, "sexo": "M", "telefono": "6561234567", "correo": "jperez@demo.test", "colonia_persona": "Independencia", "id_datosbeneficiario": "PEREZLOPEZJOSE1990_6561234567______", "alerta_duplicado": "OK", "fecha_participacion": "2026-06-10", "control_registro": "OK", "control_automatico": "OK", "decision_coordinacion": "OK", "detalle_validacion": "Misma clave que PER_00762 por colación acento-insensible; consolidado automáticamente." },
+    { "id_participacion": 991, "id_ejecucion": 132, "id_persona": null, "nombres": "Maria", "apellido_paterno": "Garcia", "apellido_materno": null, "anio_nacimiento": 1992, "sexo": "F", "telefono": "6565551212", "correo": null, "colonia_persona": "Centro", "id_datosbeneficiario": "GARCIA_MARIA1992_6565551212_________", "alerta_duplicado": "DUPLICADO_EN_CAPTURA", "fecha_participacion": "2026-06-10", "control_registro": "REVISAR", "control_automatico": "REVISAR", "decision_coordinacion": null, "detalle_validacion": "Mismo teléfono que PER_00120 (María García Reyes); falta apellido materno. Score 0.94." }
+  ],
+
+  "participaciones_agregadas": [
+    { "id_participacion_agregada": 1, "id_ejecucion": 134, "tipo_registro_participacion": "Agregado", "sexo_grupo": "Mixto", "grupo_edad_aprox": "18-29", "cantidad_participantes": 8, "motivo_no_nominal": "Confidencialidad clínica: sesiones psicológicas individuales.", "fuente_conteo": "Expedientes clínicos", "periodo_corte": "M06", "evidencia_url": "https://drive.google.com/file/d/def456/view", "control_registro": "AGREGADO" }
+  ],
+
+  "productos_entregables": [
+    { "id_producto": 1, "id_actividad": "ACT_048", "nombre_producto": "Alianza firmada con Universidad Estatal", "tipo_producto": "Alianza", "fecha_inicio": "2026-05-01", "fecha_entrega": "2026-06-15", "responsable": "Dirección de Vinculación", "cantidad": 1, "unidad_medida": "convenio", "estatus": "entregado", "descripcion": "Convenio de prácticas profesionales y servicio social.", "evidencia_url": "https://drive.google.com/file/d/xyz789/view", "nombre_archivo_evidencia": "CPJ_EVID_20260615_NA_ACT048_001.pdf", "control_registro": "OK" },
+    { "id_producto": 2, "id_actividad": "ACT_120", "nombre_producto": "Manual metodológico de prevención", "tipo_producto": "Publicación", "fecha_inicio": "2026-03-01", "fecha_entrega": null, "responsable": "Equipo Metodológico", "cantidad": 1, "unidad_medida": "documento", "estatus": "en_proceso", "descripcion": "En revisión editorial.", "evidencia_url": null, "nombre_archivo_evidencia": null, "control_registro": "INCOMPLETO" }
+  ],
+
+  "metas": [
+    { "id_meta": 1, "id_actividad": "ACT_031", "unidad_meta": "personas", "unidad_especifica": "participantes únicos", "meta_anual_total": 120.00, "observaciones": "Meta anual del taller preventivo." },
+    { "id_meta": 2, "id_actividad": "ACT_030", "unidad_meta": "asesorías", "unidad_especifica": "propuestas asesoradas", "meta_anual_total": 24.00, "observaciones": null },
+    { "id_meta": 3, "id_actividad": "ACT_094", "unidad_meta": "seguimientos", "unidad_especifica": "certificaciones en seguimiento", "meta_anual_total": 30.00, "observaciones": "Caso C: corte al cierre." }
+  ],
+
+  "metas_mensuales": [
+    { "id_meta_mensual": 1, "id_meta": 1, "mes": "M05", "valor": 10.00 },
+    { "id_meta_mensual": 2, "id_meta": 1, "mes": "M06", "valor": 10.00 },
+    { "id_meta_mensual": 3, "id_meta": 1, "mes": "M07", "valor": 10.00 },
+    { "id_meta_mensual": 4, "id_meta": 2, "mes": "M06", "valor": 2.00 },
+    { "id_meta_mensual": 5, "id_meta": 3, "mes": "M06", "valor": 0.00 },
+    { "id_meta_mensual": 6, "id_meta": 3, "mes": "M12", "valor": 30.00 }
+  ],
+
+  "resultados": [
+    { "id_resultado": 1, "id_actividad": "ACT_200", "indicador": "Porcentaje de participantes que reportan reducción de incidentes de violencia", "linea_base": 0.0000, "valor_medido": null, "metodo_medicion": "Encuesta de seguimiento a 6 meses", "fecha_medicion": null, "evidencia_url": null }
+  ],
+
+  "propuestas_incidencia": [
+    { "id_propuesta": 1, "nombre_propuesta": "Reforma al reglamento municipal de espacios públicos", "promotor_colectivo": "Colectivo Vecinal Independencia", "tipo_actor": "Sociedad civil", "fecha_inicio_asesoria": "2026-04-10", "responsable_equipo": "Equipo Incidencia", "sesiones_documentadas": 3, "mejora_documentada": true, "cambios_resultado_asesoria": "Propuesta presentada al cabildo.", "evidencia_principal": "https://drive.google.com/file/d/inc001/view", "alineada_proyectos_estrategicos": true, "criterios_alineacion_nota": "Alineada al Eje 3.", "estatus": "activo", "elegible_reporte": true, "id_actividad": "ACT_030", "periodo_reporte": "M06", "control_registro": "OK" }
+  ],
+
+  "procesos_incidencia": [
+    { "id_proceso_incidencia": 1, "nombre": "Proceso de incidencia reglamento municipal", "criterios_elegibilidad": "Cumple 3 de 3 criterios.", "ultimo_hito_resumen": "Presentación ante comisión edilicia.", "control_registro": "OK", "id_actividad": "ACT_030" }
+  ],
+
+  "compromisos": [
+    { "id_compromiso": 1, "id_proceso_incidencia": 1, "identificacion": "Compromiso de revisión por la comisión edilicia", "seguimiento_documentado": "Oficio de respuesta recibido el 2026-06-18.", "criterios_elegibilidad": "Cumple.", "control_registro": "OK" }
+  ],
+
+  "alianzas": [
+    { "id_alianza": 1, "nombre_alianza": "Convenio Universidad Estatal", "datos_alianza": "Prácticas profesionales y servicio social.", "criterios_elegibilidad": "Formalizada por convenio.", "id_actividad": "ACT_048", "control_registro": "OK" }
+  ],
+
+  "hitos_incidencia": [
+    { "id_hito": 1, "id_proceso_incidencia": 1, "fecha_hito": "2026-06-15", "tipo_hito": "Presentación", "descripcion_hito": "Presentación de la propuesta ante la comisión edilicia.", "evidencia_nombre_o_nota": "Minuta de sesión.", "registrado_por": 13, "observaciones": null }
+  ],
+
+  "ocupacion_shelter": [
+    { "id_ocupacion": 1, "id_actividad": "ACT_224", "mes_periodo": "M06", "tipo_espacio": "Módulo individual", "capacidad_instalada": 20, "ocupacion": 17, "fuente": "Bitácora de recepción", "control_registro": "AGREGADO" }
+  ],
+
+  "sostenibilidad_financiera": [
+    { "id_registro": 1, "id_actividad": "ACT_230", "mes_periodo": "M06", "ingresos_brutos": 50000.00, "costos_directos": 30000.00, "costos_indirectos": 8000.00, "recursos_efectivo": 12000.00, "recursos_especie": 5000.00, "fuente_datos": "Estado de resultados mensual", "meta_anual": 240000.00, "control_registro": "AGREGADO" }
+  ],
+
+  "roles": [
+    { "id_rol": 1, "clave": "capturista", "nombre": "Capturista", "descripcion": "Registra el día a día dentro de su institución/territorio." },
+    { "id_rol": 2, "clave": "coordinacion", "nombre": "Coordinación MEL", "descripcion": "Garantiza calidad y trazabilidad; valida, resuelve duplicados, gestiona metas." },
+    { "id_rol": 3, "clave": "direccion", "nombre": "Dirección", "descripcion": "Consume indicadores confiables; solo lectura." },
+    { "id_rol": 4, "clave": "administrador", "nombre": "Administrador", "descripcion": "Gestión técnica de usuarios y configuración." }
+  ],
+
+  "usuarios": [
+    { "id_usuario": 12, "nombre": "Ana López", "email": "capturista@demo.test", "id_rol": 1, "estatus": "activo" },
+    { "id_usuario": 13, "nombre": "Carlos Mendoza", "email": "coordinacion@demo.test", "id_rol": 2, "estatus": "activo" },
+    { "id_usuario": 14, "nombre": "María Fernanda Ríos", "email": "direccion@demo.test", "id_rol": 3, "estatus": "activo" },
+    { "id_usuario": 15, "nombre": "Admin Sistema", "email": "admin@demo.test", "id_rol": 4, "estatus": "activo" }
+  ],
+
+  "usuario_institucion": [
+    { "id": 1, "id_usuario": 12, "id_institucion": "INS_00002" },
+    { "id": 2, "id_usuario": 13, "id_institucion": "INS_00001" },
+    { "id": 3, "id_usuario": 13, "id_institucion": "INS_00002" },
+    { "id": 4, "id_usuario": 13, "id_institucion": "INS_00003" },
+    { "id": 5, "id_usuario": 14, "id_institucion": "INS_00001" },
+    { "id": 6, "id_usuario": 14, "id_institucion": "INS_00002" },
+    { "id": 7, "id_usuario": 14, "id_institucion": "INS_00003" }
+  ],
+
+  "solicitudes": [
+    { "id_solicitud": 1, "fecha_solicitud": "2026-06-18 11:20:00", "id_solicitante": 12, "rol_solicitante": "capturista", "entidad_afectada": "participaciones", "descripcion": "Corregir el teléfono del participante PAR-988, se capturó con un dígito de más.", "tipo_solicitud": "correccion", "nivel_criticidad": "MEDIA", "impacto": "Afecta la clave de deduplicación.", "estado": "en_revision", "responsable_atencion": null, "fecha_resolucion": null, "comentarios": null },
+    { "id_solicitud": 2, "fecha_solicitud": "2026-06-10 09:00:00", "id_solicitante": 13, "rol_solicitante": "coordinacion", "entidad_afectada": "actividades", "descripcion": "Reclasificar ACT_094 de P a seguimiento caso C.", "tipo_solicitud": "ajuste", "nivel_criticidad": "ALTA", "impacto": "Cambia la lógica del semáforo.", "estado": "resuelta", "responsable_atencion": 13, "fecha_resolucion": "2026-06-11 14:30:00", "comentarios": "Aplicado y auditado." }
+  ],
+
+  "auditoria": [
+    { "id_evento": 1, "fecha_hora": "2026-06-10 10:15:00.000000", "id_usuario": 12, "entidad": "ejecuciones", "id_registro": "132", "accion": "alta", "valor_antes": null, "valor_despues": { "control_registro": "OK", "fecha_ejecucion_real": "2026-06-10" } },
+    { "id_evento": 2, "fecha_hora": "2026-06-10 10:18:00.000000", "id_usuario": 12, "entidad": "participaciones", "id_registro": "988", "accion": "alta", "valor_antes": null, "valor_despues": { "id_persona": "PER_00762", "control_registro": "OK" } },
+    { "id_evento": 3, "fecha_hora": "2026-06-11 14:30:00.000000", "id_usuario": 13, "entidad": "actividades", "id_registro": "ACT_094", "accion": "reclasificacion", "valor_antes": { "caso_excepcional": null }, "valor_despues": { "caso_excepcional": "C" } },
+    { "id_evento": 4, "fecha_hora": "2026-06-12 12:00:00.000000", "id_usuario": 12, "entidad": "participaciones", "id_registro": "991", "accion": "alta", "valor_antes": null, "valor_despues": { "control_registro": "REVISAR", "alerta_duplicado": "DUPLICADO_EN_CAPTURA" } }
+  ]
+}
