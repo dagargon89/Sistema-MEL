@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 from mel_etl.normalize import limpiar_celda, a_entero, solo_fecha, normalizar_sexo, normalizar_enum
-from mel_etl.extract import leer_hoja, escribir_csv, extraer_dimensiones
+from mel_etl.extract import leer_hoja, escribir_csv, extraer_dimensiones, reasignar_ids
 import openpyxl
 
 XLSX = os.path.join(os.path.dirname(__file__), "..", "CPJ_MEL_v1_9_seguimiento_actualizado (12).xlsx")
@@ -66,6 +66,18 @@ class TestDimensiones(unittest.TestCase):
             with open(os.path.join(d, "actividades.csv")) as fh:
                 cab = fh.readline().strip().split(",")
             self.assertEqual(cab[:3], ["id_actividad", "num_actividad", "nombre"])
+
+
+class TestReasignarIds(unittest.TestCase):
+    def test_reasignar_ids_secuencial(self):
+        filas = [{"id": "PROC_00001"}, {"id": "PROC_00005"}, {"id": ""}, {"id": "PROC_00009"}]
+        mapa = reasignar_ids(filas, "id")
+        self.assertEqual(mapa, {"PROC_00001": 1, "PROC_00005": 2, "PROC_00009": 3})
+
+    def test_reasignar_ids_sin_duplicar(self):
+        filas = [{"id": "EVP_1"}, {"id": "EVP_1"}, {"id": "EVP_2"}]
+        mapa = reasignar_ids(filas, "id")
+        self.assertEqual(mapa, {"EVP_1": 1, "EVP_2": 2})
 
 
 if __name__ == "__main__":
