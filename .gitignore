@@ -33,3 +33,7 @@ phpstan.cache
 # Fuente de datos con PII real (el dato vive en db.json, no se trackea el Excel)
 CPJ_MEL_v1_9_seguimiento_actualizado*.xlsx
 *.xlsx
+
+# Python (extractor ETL en tools/)
+__pycache__/
+*.pyc
