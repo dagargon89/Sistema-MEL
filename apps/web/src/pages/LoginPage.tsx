@@ -13,6 +13,11 @@ const DEMO: { email: string; nombre: string; rol: RolClave }[] = [
   { email: "admin@demo.test", nombre: "Admin Sistema", rol: "administrador" },
 ];
 
+// Mock (Fase 1): cualquier contraseña sirve. API real (Fase 2): Shield exige la
+// contraseña real; las cuentas demo usan la contraseña sembrada por el seeder.
+const USA_MOCK = import.meta.env.VITE_USE_MOCK !== "false";
+const CLAVE_DEMO = USA_MOCK ? "demo" : "MelDemo2026!";
+
 export function LoginPage() {
   const { user, login, loading, error } = useSession();
   const navigate = useNavigate();
@@ -26,7 +31,7 @@ export function LoginPage() {
   async function entrar(e: FormEvent, correo = email, clave = password) {
     e.preventDefault();
     try {
-      await login(correo, clave || "demo");
+      await login(correo, clave || CLAVE_DEMO);
       navigate(from, { replace: true });
     } catch {
       /* el error se muestra desde el store */
@@ -73,13 +78,13 @@ export function LoginPage() {
         <div className="mt-5 rounded-md border border-dashed border-border bg-bg p-4">
           <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-accent-text">
             <FlaskConical className="size-3.5" aria-hidden="true" />
-            Cuentas demo (cualquier contraseña)
+            {USA_MOCK ? "Cuentas demo (cualquier contraseña)" : "Cuentas demo (contraseña: MelDemo2026!)"}
           </p>
           <div className="grid grid-cols-1 gap-1.5">
             {DEMO.map((d) => (
               <button
                 key={d.email}
-                onClick={(e) => entrar(e, d.email, "demo")}
+                onClick={(e) => entrar(e, d.email, CLAVE_DEMO)}
                 disabled={loading}
                 className="flex items-center justify-between rounded-md border border-border px-3 py-1.5 text-left text-sm hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
               >
