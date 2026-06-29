@@ -8,15 +8,17 @@ use CodeIgniter\Database\Migration;
 
 /**
  * Gobernanza: usuarios (extensión de dominio sobre Shield `users`). doc 03 §3.7.
- * `id_usuario` = user_id de Shield (NO auto_increment). La FK a `users` de Shield
- * se añade en el Sprint 1, tras `php spark shield:setup`.
+ * `id_usuario` = user_id de Shield (NO auto_increment). Tipo INT UNSIGNED para
+ * coincidir con `users.id` de Shield (INT UNSIGNED); de lo contrario la FK
+ * `fk_usuarios_users` (migración 200001) falla por tipos incompatibles. La FK a
+ * `users` de Shield se añade en el Sprint 1, tras `php spark shield:setup`.
  */
 class CreateUsuarios extends Migration
 {
     public function up(): void
     {
         $this->forge->addField([
-            'id_usuario' => ['type' => 'BIGINT', 'unsigned' => true],
+            'id_usuario' => ['type' => 'INT', 'unsigned' => true],
             'nombre'     => ['type' => 'VARCHAR', 'constraint' => 150],
             'email'      => ['type' => 'VARCHAR', 'constraint' => 190],
             'id_rol'     => ['type' => 'TINYINT', 'unsigned' => true],
