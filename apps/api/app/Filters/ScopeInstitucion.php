@@ -27,7 +27,7 @@ class ScopeInstitucion implements FilterInterface
         }
 
         $rol           = $user->getGroups()[0] ?? null;
-        $global        = $user->can('data.viewAll');
+        $global        = $user->can('data.viewall');
         $instituciones = (new UsuarioInstitucionModel())->institucionesDe((int) $user->id);
 
         Services::currentScope()->set((int) $user->id, $rol, $instituciones, $global);
