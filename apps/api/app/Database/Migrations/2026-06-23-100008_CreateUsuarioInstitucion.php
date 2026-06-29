@@ -17,7 +17,7 @@ class CreateUsuarioInstitucion extends Migration
     {
         $this->forge->addField([
             'id'             => ['type' => 'BIGINT', 'unsigned' => true, 'auto_increment' => true],
-            'id_usuario'     => ['type' => 'BIGINT', 'unsigned' => true],
+            'id_usuario'     => ['type' => 'INT', 'unsigned' => true],
             'id_institucion' => ['type' => 'CHAR', 'constraint' => 12],
         ]);
         $this->forge->addKey('id', true);

@@ -17,7 +17,7 @@ class CreateAuditoria extends Migration
         $this->forge->addField([
             'id_evento'     => ['type' => 'BIGINT', 'unsigned' => true, 'auto_increment' => true],
             'fecha_hora'    => ['type' => 'DATETIME'],
-            'id_usuario'    => ['type' => 'BIGINT', 'unsigned' => true, 'null' => true],
+            'id_usuario'    => ['type' => 'INT', 'unsigned' => true, 'null' => true],
             'entidad'       => ['type' => 'VARCHAR', 'constraint' => 60],
             'id_registro'   => ['type' => 'VARCHAR', 'constraint' => 40],
             'accion'        => ['type' => 'ENUM', 'constraint' => ['alta', 'edicion', 'baja', 'reclasificacion', 'validacion']],
