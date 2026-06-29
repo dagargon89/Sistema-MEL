@@ -31,8 +31,9 @@ class UsuariosRealesSeeder extends Seeder
             $this->db->table('roles')->insertBatch(self::ROLES);
         }
 
-        $roles = $this->db->table('roles')->get()->getResultArray();
-        $idRol = [];
+        $resultado = $this->db->table('roles')->get();
+        $roles     = $resultado === false ? [] : $resultado->getResultArray();
+        $idRol     = [];
         foreach ($roles as $r) {
             $idRol[$r['clave']] = (int) $r['id_rol'];
         }
@@ -52,6 +53,9 @@ class UsuariosRealesSeeder extends Seeder
             $entity = new User(['username' => null]);
             $provider->save($entity);
             $saved = $provider->findById($provider->getInsertID());
+            if ($saved === null) {
+                throw new \RuntimeException("No se pudo crear el usuario Shield: {$u['email']}.");
+            }
             $saved->createEmailIdentity(['email' => $u['email'], 'password' => self::DEV_PASSWORD]);
             // El rol del login (AuthController) se deriva del grupo de Shield (getGroups()),
             // no de usuarios.id_rol. Sin esto, user.rol llega null a la SPA y la UI no renderiza.

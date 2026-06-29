@@ -48,3 +48,62 @@ jobs:
         run: composer stan
       - name: Pruebas (PHPUnit · migraciones + seeder en SQLite)
         run: composer test
+
+  api-mysql:
+    name: API · migración + smoke de auth contra MySQL real
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: sistema_mel
+          MYSQL_USER: mel
+          MYSQL_PASSWORD: mel_secret
+          MYSQL_ROOT_PASSWORD: root_secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot_secret"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: intl, mbstring, mysqli, json
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Configurar .env contra el MySQL del servicio
+        run: |
+          cp env .env
+          {
+            echo "database.default.hostname = 127.0.0.1"
+            echo "database.default.database = sistema_mel"
+            echo "database.default.username = mel"
+            echo "database.default.password = mel_secret"
+            echo "database.default.DBDriver = MySQLi"
+            echo "database.default.port = 3306"
+          } >> .env
+          php spark key:generate
+      # Caza el bug de tipos en la FK usuarios→users de Shield (solo se manifiesta en MySQL).
+      - name: Migración completa contra MySQL
+        run: php spark migrate --all
+      - name: Seed de usuarios (grupos de Shield)
+        run: php spark db:seed UsuariosRealesSeeder
+      # Smoke de auth: caza rol nulo, permiso mal escrito y RBAC de admin (latentes en SQLite).
+      - name: Smoke de login y ámbito
+        run: |
+          php spark serve --host 127.0.0.1 --port 8080 > /tmp/serve.log 2>&1 &
+          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8080/api/v1/health && break || sleep 1; done
+          RESP=$(curl -s -X POST http://127.0.0.1:8080/api/v1/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"admin@demo.test","password":"MelDemo2026!"}')
+          echo "login: $RESP"
+          echo "$RESP" | grep -q '"rol": *"administrador"' || { echo "FALLA: rol no resuelto en el login"; exit 1; }
+          TOKEN=$(echo "$RESP" | sed -E 's/.*"token": *"([^"]+)".*/\1/')
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/api/v1/catalogos/instituciones -H "Authorization: Bearer $TOKEN")
+          test "$CODE" = "200" || { echo "FALLA: admin no obtiene 200 en instituciones (HTTP $CODE)"; exit 1; }
+          echo "Smoke de auth OK: login con rol y acceso global del administrador."
