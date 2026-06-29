@@ -5,14 +5,6 @@ Cada entrada: nombre de hoja, archivo CSV, y `cols` como lista de tuplas
 función de normalize aplicada a la celda ('' = limpiar_celda por defecto).
 """
 
-# Mapas de enum del Excel → valores del esquema.
-ESTATUS_DIM = ({"activo": "activo", "inactivo": "inactivo"}, ["activo", "inactivo"])
-
-# Mapas de enum de la cadena.
-TIPO_PROG = ({}, ["SESION_UNICA", "MULTI_SESION_PROGRAMADA", "PROCESO_CONTINUO"])
-ESTATUS_PROC = ({}, ["activo", "concluido", "cancelado"])
-ESTATUS_EVENTO = ({}, ["programado", "ejecutado", "cancelado", "reprogramado"])
-
 # procesos y eventos llevan id propio (string→int) y FK a remapear.
 PROCESOS = {
     "hoja": "🧭cat_procesos_programados",
@@ -54,9 +46,6 @@ EVENTOS = {
         ("observaciones", "observaciones", ""),
     ],
 }
-
-ESTATUS_EJEC = ({}, ["ejecutada", "suspendida", "parcial"])
-CONTROL_EJEC = ({}, ["CAPTURADO", "INCOMPLETO", "REVISAR", "OK", "AGREGADO"])
 
 EJECUCIONES = {
     "hoja": "✅actividades_ejecutadas",
@@ -167,7 +156,7 @@ DIMENSIONES = {
             ("nom_actividad", "nombre", ""),
             ("id_eje", "id_eje", ""),
             ("id_linea", "id_linea", ""),
-            ("id_componente", "id_componente", ""),
+            ("id_componente", "id_componente", "comp_id"),
             ("id_institucion", "id_institucion", ""),
             ("tipo_registro_actividad", "tipo_registro", "tipo_per"),
             ("caso_excepcional", "caso_excepcional", ""),

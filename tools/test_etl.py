@@ -1,8 +1,9 @@
+import csv as _csv_mod
 import os
 import tempfile
 import unittest
 from mel_etl.normalize import limpiar_celda, a_entero, solo_fecha, normalizar_sexo, normalizar_enum
-from mel_etl.extract import leer_hoja, escribir_csv, extraer_dimensiones, reasignar_ids
+from mel_etl.extract import leer_hoja, escribir_csv, extraer_dimensiones, reasignar_ids, _TRANSFORMS
 from mel_etl.extract import extraer_cadena_programada, extraer_ejecuciones_y_participacion
 import openpyxl
 
@@ -79,6 +80,76 @@ class TestReasignarIds(unittest.TestCase):
         filas = [{"id": "EVP_1"}, {"id": "EVP_1"}, {"id": "EVP_2"}]
         mapa = reasignar_ids(filas, "id")
         self.assertEqual(mapa, {"EVP_1": 1, "EVP_2": 2})
+
+
+class TestCompIdTransform(unittest.TestCase):
+    """Tests para la transform comp_id: COM_NNN → COMP_NNN."""
+
+    def setUp(self):
+        self.fn = _TRANSFORMS["comp_id"]
+
+    def test_com_normaliza_a_comp(self):
+        self.assertEqual(self.fn("COM_006"), "COMP_006")
+
+    def test_comp_permanece_igual(self):
+        self.assertEqual(self.fn("COMP_006"), "COMP_006")
+
+    def test_vacio_permanece_vacio(self):
+        self.assertEqual(self.fn(""), "")
+        self.assertEqual(self.fn(None), "")
+
+    def test_com_con_ceros_multiples(self):
+        self.assertEqual(self.fn("COM_012"), "COMP_012")
+
+    def test_no_normaliza_prefijos_distintos(self):
+        # COMP_ ya es correcto, COM_ sin dígitos no debe transformarse a medias
+        self.assertEqual(self.fn("COMP_999"), "COMP_999")
+        # Cadena sin patrón COM_NNN queda intacta
+        self.assertEqual(self.fn("ACT_001"), "ACT_001")
+
+
+class TestSinFKDangling(unittest.TestCase):
+    """Test de integración: tras extraer_dimensiones + extraer_cadena_programada,
+    ningún id_actividad en eventos.csv puede quedar fuera del set de actividades.csv.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.wb = openpyxl.load_workbook(XLSX, read_only=True, data_only=True)
+
+    def test_no_fk_dangling_eventos(self):
+        with tempfile.TemporaryDirectory() as d:
+            conteos = extraer_dimensiones(self.wb, d)
+            act_ids = conteos["act_ids"]
+            self.assertGreater(len(act_ids), 0, "act_ids vacío")
+
+            extraer_cadena_programada(self.wb, d, act_ids=act_ids)
+
+            # Verificar que todos los id_actividad de eventos.csv están en act_ids.
+            with open(os.path.join(d, "eventos.csv"), newline="", encoding="utf-8") as fh:
+                filas_ev = list(_csv_mod.DictReader(fh))
+            dangling = [
+                r["id_actividad"]
+                for r in filas_ev
+                if r.get("id_actividad") and r["id_actividad"] not in act_ids
+            ]
+            self.assertEqual(dangling, [], f"FK dangling en eventos.csv: {dangling[:5]}")
+
+    def test_no_fk_dangling_procesos(self):
+        with tempfile.TemporaryDirectory() as d:
+            conteos = extraer_dimensiones(self.wb, d)
+            act_ids = conteos["act_ids"]
+
+            extraer_cadena_programada(self.wb, d, act_ids=act_ids)
+
+            with open(os.path.join(d, "procesos.csv"), newline="", encoding="utf-8") as fh:
+                filas_proc = list(_csv_mod.DictReader(fh))
+            dangling = [
+                r["id_actividad"]
+                for r in filas_proc
+                if r.get("id_actividad") and r["id_actividad"] not in act_ids
+            ]
+            self.assertEqual(dangling, [], f"FK dangling en procesos.csv: {dangling[:5]}")
 
 
 class TestCadenaMEL(unittest.TestCase):

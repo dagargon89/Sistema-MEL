@@ -21,9 +21,10 @@ def main():
 
     wb = openpyxl.load_workbook(args.xlsx, read_only=True, data_only=True)
     conteos = extraer_dimensiones(wb, args.out)
-    cad = extraer_cadena_programada(wb, args.out)
+    cad = extraer_cadena_programada(wb, args.out, act_ids=conteos.get("act_ids"))
     cad_mel = extraer_ejecuciones_y_participacion(wb, args.out, cad["mapa_eventos"])
-    for d in (conteos, {k: v for k, v in cad.items() if isinstance(v, int)},
+    for d in ({k: v for k, v in conteos.items() if isinstance(v, int)},
+              {k: v for k, v in cad.items() if isinstance(v, int)},
               {k: v for k, v in cad_mel.items() if isinstance(v, int)}):
         for nombre, n in d.items():
             print(f"  {nombre:16} {n}")

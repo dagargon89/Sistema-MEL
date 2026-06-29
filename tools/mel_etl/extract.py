@@ -6,6 +6,17 @@ import os
 from . import normalize
 from .sheets import DIMENSIONES, PROCESOS, EVENTOS, EJECUCIONES, PARTICIPACIONES, AGREGADAS
 
+import re as _re
+
+
+def _normalizar_comp_id(v) -> str:
+    """Normaliza COM_NNN → COMP_NNN; deja COMP_NNN y demás valores intactos."""
+    s = normalize.limpiar_celda(v)
+    if _re.match(r'^COM_\d+$', s):
+        return 'COMP_' + s[4:]
+    return s
+
+
 _TRANSFORMS = {
     "": normalize.limpiar_celda,
     "a_entero": normalize.a_entero,
@@ -17,6 +28,7 @@ _TRANSFORMS = {
     "estatus_proc": lambda v: normalize.normalizar_enum(v, {}, ["activo", "concluido", "cancelado"]),
     "estatus_evento": lambda v: normalize.normalizar_enum(v, {}, ["programado", "ejecutado", "cancelado", "reprogramado"]),
     "estatus_ejec": lambda v: normalize.normalizar_enum(v, {}, ["ejecutada", "suspendida", "parcial"]),
+    "comp_id": _normalizar_comp_id,
 }
 
 
@@ -69,10 +81,21 @@ def _extraer_tabla(wb, definicion, outdir, archivo):
 
 
 def extraer_dimensiones(wb, outdir):
-    """Genera ejes/instituciones/lineas/componentes/actividades .csv. Devuelve conteos."""
+    """Genera ejes/instituciones/lineas/componentes/actividades .csv.
+
+    Devuelve dict con conteos por tabla más ``act_ids``: conjunto de
+    id_actividad válidos (para filtrar FK dangling aguas abajo).
+    """
     conteos = {}
     for nombre, definicion in DIMENSIONES.items():
         conteos[nombre] = _extraer_tabla(wb, definicion, outdir, f"{nombre}.csv")
+
+    # Recolectar ids de actividades válidas para filtrado FK posterior.
+    import csv as _csv
+    act_path = os.path.join(outdir, "actividades.csv")
+    with open(act_path, newline="", encoding="utf-8") as fh:
+        conteos["act_ids"] = {row["id_actividad"] for row in _csv.DictReader(fh) if row.get("id_actividad")}
+
     return conteos
 
 
@@ -98,8 +121,14 @@ def _tipo_prog(v):
 _TRANSFORMS["tipo_prog"] = _tipo_prog
 
 
-def extraer_cadena_programada(wb, outdir):
-    """Escribe procesos.csv y eventos.csv con ids enteros y FK remapeadas."""
+def extraer_cadena_programada(wb, outdir, act_ids=None):
+    """Escribe procesos.csv y eventos.csv con ids enteros y FK remapeadas.
+
+    ``act_ids``: conjunto de id_actividad válidos (de actividades.csv).
+    Filas de procesos/eventos cuyo id_actividad no esté en el conjunto se
+    descartan para evitar FK dangling.  Si ``act_ids`` es None se omite el
+    filtrado (retrocompatibilidad con tests que no leen el Excel completo).
+    """
     # Procesos: id propio string→int.
     proc_filas = leer_hoja(wb, PROCESOS["hoja"])
     mapa_procesos = reasignar_ids(proc_filas, PROCESOS["clave_excel"])
@@ -113,6 +142,10 @@ def extraer_cadena_programada(wb, outdir):
         for excel_col, csv_col, transform in PROCESOS["cols"]:
             fn = _TRANSFORMS.get(transform, normalize.limpiar_celda)
             fila[csv_col] = fn(reg.get(excel_col))
+        # Descartar proceso si su id_actividad no existe en dimensiones.
+        if act_ids is not None and fila.get("id_actividad", "") not in act_ids:
+            mapa_procesos.pop(sid, None)  # invalida el id para que eventos lo ignoren
+            continue
         out_proc.append(fila)
     n_proc = escribir_csv(os.path.join(outdir, "procesos.csv"), cab_proc, out_proc)
 
@@ -133,6 +166,10 @@ def extraer_cadena_programada(wb, outdir):
         for excel_col, csv_col, transform in EVENTOS["cols"]:
             fn = _TRANSFORMS.get(transform, normalize.limpiar_celda)
             fila[csv_col] = fn(reg.get(excel_col))
+        # Descartar evento si su id_actividad no existe en dimensiones.
+        if act_ids is not None and fila.get("id_actividad", "") not in act_ids:
+            mapa_eventos.pop(sid, None)  # invalida el id para que ejecuciones lo ignoren
+            continue
         out_ev.append(fila)
     n_ev = escribir_csv(os.path.join(outdir, "eventos.csv"), cab_ev, out_ev)
 
@@ -148,19 +185,32 @@ def _fila_cols(reg, cols):
 
 
 def extraer_ejecuciones_y_participacion(wb, outdir, mapa_eventos):
-    """Escribe ejecuciones/participaciones/agregadas .csv con FK enteras remapeadas."""
+    """Escribe ejecuciones/participaciones/agregadas .csv con FK enteras remapeadas.
+
+    Descarta ejecuciones cuyo id_evento_programado no esté en ``mapa_eventos``
+    (FK dangling).  Participaciones y agregadas cuyo id_ejecucion quede huérfano
+    también son descartadas automáticamente porque ``mapa_ejecuciones`` sólo
+    conserva los ids de ejecuciones que se escribieron.
+    """
     # Ejecuciones: id propio string→int + FK id_evento_programado.
     ej_filas = leer_hoja(wb, EJECUCIONES["hoja"])
-    mapa_ejecuciones = reasignar_ids(ej_filas, EJECUCIONES["clave_excel"])
+    mapa_ejecuciones_raw = reasignar_ids(ej_filas, EJECUCIONES["clave_excel"])
     cab_ej = ["id_ejecucion", "id_evento_programado"] + [c[1] for c in EJECUCIONES["cols"]]
     out_ej = []
+    # Solo incluimos en mapa_ejecuciones los ids de ejecuciones efectivamente escritas.
+    mapa_ejecuciones = {}
     for reg in ej_filas:
         sid = normalize.limpiar_celda(reg.get(EJECUCIONES["clave_excel"]))
-        if sid not in mapa_ejecuciones:
+        if sid not in mapa_ejecuciones_raw:
             continue
         sev = normalize.limpiar_celda(reg.get(EJECUCIONES["fk_evento_excel"]))
-        fila = {"id_ejecucion": mapa_ejecuciones[sid], "id_evento_programado": mapa_eventos.get(sev, "")}
+        id_ev = mapa_eventos.get(sev, "")
+        # Descartar ejecución si su evento programado no existe (FK dangling).
+        if id_ev == "":
+            continue
+        fila = {"id_ejecucion": mapa_ejecuciones_raw[sid], "id_evento_programado": id_ev}
         fila.update(_fila_cols(reg, EJECUCIONES["cols"]))
+        mapa_ejecuciones[sid] = mapa_ejecuciones_raw[sid]
         out_ej.append(fila)
     n_ej = escribir_csv(os.path.join(outdir, "ejecuciones.csv"), cab_ej, out_ej)
 
