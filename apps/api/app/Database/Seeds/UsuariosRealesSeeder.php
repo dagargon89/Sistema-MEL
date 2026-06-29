@@ -53,6 +53,9 @@ class UsuariosRealesSeeder extends Seeder
             $provider->save($entity);
             $saved = $provider->findById($provider->getInsertID());
             $saved->createEmailIdentity(['email' => $u['email'], 'password' => self::DEV_PASSWORD]);
+            // El rol del login (AuthController) se deriva del grupo de Shield (getGroups()),
+            // no de usuarios.id_rol. Sin esto, user.rol llega null a la SPA y la UI no renderiza.
+            $saved->addGroup($u['rol']);
 
             $idUsuario = $saved->id;
             $this->db->table('usuarios')->insert([
