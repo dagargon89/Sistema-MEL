@@ -24,6 +24,13 @@ class Rbac implements FilterInterface
                 ->setJSON(['success' => false, 'message' => 'No autenticado.']);
         }
 
+        // El administrador funciona como superadmin: acceso total, igual que el
+        // ProtectedRoute del frontend. Sin esto, admin recibe 403 en rutas de
+        // operación (p. ej. la cola de duplicados, rbac:coordinacion).
+        if ($user->inGroup('administrador')) {
+            return null;
+        }
+
         $permitidos = array_map(static fn ($g): string => (string) $g, $arguments ?? []);
         if ($permitidos !== [] && ! $user->inGroup(...$permitidos)) {
             return response()
