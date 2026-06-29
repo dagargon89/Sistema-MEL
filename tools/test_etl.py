@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from mel_etl.normalize import limpiar_celda, a_entero, solo_fecha, normalizar_sexo, normalizar_enum
 from mel_etl.extract import leer_hoja, escribir_csv, extraer_dimensiones, reasignar_ids
+from mel_etl.extract import extraer_cadena_programada, extraer_ejecuciones_y_participacion
 import openpyxl
 
 XLSX = os.path.join(os.path.dirname(__file__), "..", "CPJ_MEL_v1_9_seguimiento_actualizado (12).xlsx")
@@ -78,6 +79,29 @@ class TestReasignarIds(unittest.TestCase):
         filas = [{"id": "EVP_1"}, {"id": "EVP_1"}, {"id": "EVP_2"}]
         mapa = reasignar_ids(filas, "id")
         self.assertEqual(mapa, {"EVP_1": 1, "EVP_2": 2})
+
+
+class TestCadenaMEL(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.wb = openpyxl.load_workbook(XLSX, read_only=True, data_only=True)
+
+    def test_participaciones_y_sexo(self):
+        with tempfile.TemporaryDirectory() as d:
+            cad = extraer_cadena_programada(self.wb, d)
+            res = extraer_ejecuciones_y_participacion(self.wb, d, cad["mapa_eventos"])
+            for nombre in ["ejecuciones", "participaciones", "agregadas"]:
+                self.assertTrue(os.path.exists(os.path.join(d, f"{nombre}.csv")))
+            self.assertGreater(res["participaciones"], 800)   # línea base ≈988
+            # sexo normalizado: solo F/M/X o vacío
+            import csv as _csv
+            with open(os.path.join(d, "participaciones.csv")) as fh:
+                sexos = {row["sexo"] for row in _csv.DictReader(fh)}
+            self.assertTrue(sexos <= {"F", "M", "X", ""}, f"sexo sin normalizar: {sexos}")
+            # id_ejecucion es entero
+            with open(os.path.join(d, "participaciones.csv")) as fh:
+                primera = next(_csv.DictReader(fh))
+            self.assertTrue(primera["id_ejecucion"].isdigit() or primera["id_ejecucion"] == "")
 
 
 if __name__ == "__main__":

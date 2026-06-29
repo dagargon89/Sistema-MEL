@@ -4,7 +4,7 @@ import csv
 import os
 
 from . import normalize
-from .sheets import DIMENSIONES, PROCESOS, EVENTOS
+from .sheets import DIMENSIONES, PROCESOS, EVENTOS, EJECUCIONES, PARTICIPACIONES, AGREGADAS
 
 _TRANSFORMS = {
     "": normalize.limpiar_celda,
@@ -16,6 +16,7 @@ _TRANSFORMS = {
                            if normalize.limpiar_celda(v).upper() in ("P", "E", "R") else ""),
     "estatus_proc": lambda v: normalize.normalizar_enum(v, {}, ["activo", "concluido", "cancelado"]),
     "estatus_evento": lambda v: normalize.normalizar_enum(v, {}, ["programado", "ejecutado", "cancelado", "reprogramado"]),
+    "estatus_ejec": lambda v: normalize.normalizar_enum(v, {}, ["ejecutada", "suspendida", "parcial"]),
 }
 
 
@@ -136,3 +137,60 @@ def extraer_cadena_programada(wb, outdir):
     n_ev = escribir_csv(os.path.join(outdir, "eventos.csv"), cab_ev, out_ev)
 
     return {"procesos": n_proc, "eventos": n_ev, "mapa_procesos": mapa_procesos, "mapa_eventos": mapa_eventos}
+
+
+def _fila_cols(reg, cols):
+    out = {}
+    for excel_col, csv_col, transform in cols:
+        fn = _TRANSFORMS.get(transform, normalize.limpiar_celda)
+        out[csv_col] = fn(reg.get(excel_col))
+    return out
+
+
+def extraer_ejecuciones_y_participacion(wb, outdir, mapa_eventos):
+    """Escribe ejecuciones/participaciones/agregadas .csv con FK enteras remapeadas."""
+    # Ejecuciones: id propio string→int + FK id_evento_programado.
+    ej_filas = leer_hoja(wb, EJECUCIONES["hoja"])
+    mapa_ejecuciones = reasignar_ids(ej_filas, EJECUCIONES["clave_excel"])
+    cab_ej = ["id_ejecucion", "id_evento_programado"] + [c[1] for c in EJECUCIONES["cols"]]
+    out_ej = []
+    for reg in ej_filas:
+        sid = normalize.limpiar_celda(reg.get(EJECUCIONES["clave_excel"]))
+        if sid not in mapa_ejecuciones:
+            continue
+        sev = normalize.limpiar_celda(reg.get(EJECUCIONES["fk_evento_excel"]))
+        fila = {"id_ejecucion": mapa_ejecuciones[sid], "id_evento_programado": mapa_eventos.get(sev, "")}
+        fila.update(_fila_cols(reg, EJECUCIONES["cols"]))
+        out_ej.append(fila)
+    n_ej = escribir_csv(os.path.join(outdir, "ejecuciones.csv"), cab_ej, out_ej)
+
+    # Participaciones: FK id_ejecucion; descarta filas sin ejecución o sin nombre.
+    par_filas = leer_hoja(wb, PARTICIPACIONES["hoja"])
+    cab_par = ["id_ejecucion"] + [c[1] for c in PARTICIPACIONES["cols"]]
+    out_par = []
+    for reg in par_filas:
+        sej = normalize.limpiar_celda(reg.get(PARTICIPACIONES["fk_ejecucion_excel"]))
+        idej = mapa_ejecuciones.get(sej, "")
+        fila = {"id_ejecucion": idej}
+        fila.update(_fila_cols(reg, PARTICIPACIONES["cols"]))
+        if idej == "" or fila.get("nombres", "") == "" or fila.get("apellido_paterno", "") == "":
+            continue
+        out_par.append(fila)
+    n_par = escribir_csv(os.path.join(outdir, "participaciones.csv"), cab_par, out_par)
+
+    # Agregadas: FK id_ejecucion.
+    agr_filas = leer_hoja(wb, AGREGADAS["hoja"])
+    cab_agr = ["id_ejecucion"] + [c[1] for c in AGREGADAS["cols"]]
+    out_agr = []
+    for reg in agr_filas:
+        sej = normalize.limpiar_celda(reg.get(AGREGADAS["fk_ejecucion_excel"]))
+        idej = mapa_ejecuciones.get(sej, "")
+        if idej == "":
+            continue
+        fila = {"id_ejecucion": idej}
+        fila.update(_fila_cols(reg, AGREGADAS["cols"]))
+        out_agr.append(fila)
+    n_agr = escribir_csv(os.path.join(outdir, "agregadas.csv"), cab_agr, out_agr)
+
+    return {"ejecuciones": n_ej, "participaciones": n_par, "agregadas": n_agr,
+            "mapa_ejecuciones": mapa_ejecuciones}

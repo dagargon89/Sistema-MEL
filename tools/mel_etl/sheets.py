@@ -55,6 +55,60 @@ EVENTOS = {
     ],
 }
 
+ESTATUS_EJEC = ({}, ["ejecutada", "suspendida", "parcial"])
+CONTROL_EJEC = ({}, ["CAPTURADO", "INCOMPLETO", "REVISAR", "OK", "AGREGADO"])
+
+EJECUCIONES = {
+    "hoja": "✅actividades_ejecutadas",
+    "clave_excel": "id_evento_ejecutado",     # EJE_xxxxx (ejecución) → entero
+    "fk_evento_excel": "id_evento_programado",  # EVP_xxxxx → mapa_eventos
+    "cols": [
+        ("fecha_ejecucion_real", "fecha_ejecucion_real", "solo_fecha"),
+        ("hora_inicio_real", "hora_inicio_real", ""),
+        ("hora_finalizacion_real", "hora_finalizacion_real", ""),
+        ("lugar_actividad_real", "lugar_real", ""),
+        ("colonia_real", "colonia_real", ""),
+        ("responsable_actividad_real", "responsable_real", ""),
+        ("estatus_ejecucion", "estatus_ejecucion", "estatus_ejec"),
+        ("total_participantes", "total_participantes", "a_entero"),
+        ("evidencia_url", "evidencia_url", ""),
+        ("nombre_archivo_evidencia", "nombre_archivo_evidencia", ""),
+        ("resumen_narrativo_actividad", "resumen_narrativo", ""),
+        ("observaciones", "observaciones", ""),
+    ],
+}
+
+PARTICIPACIONES = {
+    "hoja": "🤝participacion_actividad",
+    "fk_ejecucion_excel": "id_evento_ejecutado",  # → mapa_ejecuciones
+    "cols": [
+        ("nombres", "nombres", ""),
+        ("apellido_paterno", "apellido_paterno", ""),
+        ("apellido_materno", "apellido_materno", ""),
+        ("anio_nacimiento", "anio_nacimiento", "a_entero"),
+        ("sexo", "sexo", "sexo"),
+        ("telefono", "telefono", "a_entero"),
+        ("correo", "correo", ""),
+        ("colonia_persona", "colonia_persona", ""),
+        ("fecha_participacion", "fecha_participacion", "solo_fecha"),
+    ],
+}
+
+AGREGADAS = {
+    "hoja": "👥participacion_agregada",
+    "fk_ejecucion_excel": "id_evento_ejecutado",  # → mapa_ejecuciones
+    "cols": [
+        ("tipo_registro_participacion", "tipo_registro_participacion", ""),
+        ("sexo_grupo", "sexo_grupo", ""),
+        ("grupo_edad_aprox", "grupo_edad_aprox", ""),
+        ("cantidad_participantes", "cantidad_participantes", "a_entero"),
+        ("motivo_no_nominal", "motivo_no_nominal", ""),
+        ("fuente_conteo", "fuente_conteo", ""),
+        ("periodo_corte", "periodo_corte", ""),
+        ("evidencia_url_opcional", "evidencia_url", ""),
+    ],
+}
+
 DIMENSIONES = {
     "ejes": {
         "hoja": "🔵dim_ejes",
